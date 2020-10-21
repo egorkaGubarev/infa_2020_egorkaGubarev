@@ -23,34 +23,30 @@ clock = pygame.time.Clock()
 finished = False
 
 # Interface
+bullets_amount_text = 'Bullets left: '
+bullet_speed_text = 'Start bullet speed [px / s]: '
 font = 'MTCORSVA.TTF'
-smoothing = True
-text_size = 36
+font_size = 36
+text_smoothing = True
+text_x = 0
+text_y = 0
 
 # -Objects-
 
 # Bullet
-time_to_live = 10
+bullets_amount = 50
 bullet_list = []
+bullet_speed = 0
+bullet_speed_max = 740
+bullet_speed_step = 10
+bullet_time_to_live = 10
 
 # Cannon
-ammo_amount = 50
-ammo_text = 'Bullets left: '
-ammo_text_x = 0
-ammo_text_y = text_size * 2
 cannon_direction = 0
-cannon_d_text = 'Cannon direction [degrees]: ' # cannon_direction_text
-c_d_t_x = 0 # cannon_direction_text_x
-c_d_t_y = text_size # cannon_direction_text_y
-cannon_max_speed = 740
-cannon_speed = 0
-cannon_speed_text = 'Start bullet speed [px / s]: '
-c_s_t_x = 0 # cannon_speed_text_x
-c_s_t_y = 0 # cannon_speed_text_y
-cannon_length = 100
-cannon_width = 25
+cannon_height = 25
 cannon_x = 0
-cannon_y = screen_height - cannon_width
+cannon_y = screen_height - cannon_height
+cannon_width = 100
 
 # Physics
 dt = 1/FPS # Integral step in [s]
@@ -63,25 +59,16 @@ class Bullet:
     Defines bullet
     '''
     
-    def __init__(self, color: list, speed_x: int, speed_y: int, radius: int, time_to_live: int, x: int, y: int):
+    def __init__(self, speed_x: int, speed_y: int, x: int, y: int):
         '''
         Bullet params
-        color is list of 3 RGB values
-        speed is bullet speed after shooting in [px / s]
-        radius im [px]
-        time_to_live in [s]
-        speed_x in [px / s] in x axis
-        speed_y in [px / s] in y axis
-        Zero point is centre of a bullet
-        x is x coordinate of zero point in [px]
-        y is y coordinate of zero point in [px]
         '''
         
-        self.color = color
+        self.color = cannon.color
+        self.radius = cannon.height // 2
         self.speed_x = speed_x
         self.speed_y = speed_y
-        self.radius = radius
-        self.time_to_live = time_to_live * FPS
+        self.time_to_live = bullet_time_to_live * FPS
         self.x = x
         self.y = y
         
@@ -104,35 +91,32 @@ class Bullet:
         Moves the bullet over the screen
         '''
         
-        wall = ''
-        if self.x < self.radius or self.x > screen_width - self.radius:
-            wall = 'x'
-            self.reflect(wall)
-        if self.y < self.radius or self.y > screen_height - self.radius:
-            wall = 'y'
-            self.reflect(wall)
+        # Var simplification
+        r = self.radius
+        
+        if self.x < r or self.x > screen_width - r or self.y < r or self.y > screen_height - r:
+            self.reflect()
         self.speed_y = self.speed_y + g * dt
         self.x = self.x + self.speed_x * dt
         self.y = self.y + self.speed_y * dt
-        self.draw()
         self.decrease_lifetime()
+        self.draw()
         
-    def reflect(self, wall: str):
+    def reflect(self):
         '''
         Makes reflections from walls
-        speed is 'x' or 'y'
         '''
         
-        if wall == 'x':
+        if self.x < self.radius or self.x > screen_width - self.radius:
             self.speed_x = -self.speed_x * elasticity_ortogonal
             self.speed_y = self.speed_y * elasticity_parallel
             if self.x < self.radius:
                 self.x = self.radius
             else:
                 self.x = screen_width - self.radius
-        elif wall == 'y':
-            self.speed_y = -self.speed_y * elasticity_ortogonal
+        if self.y < self.radius or self.y > screen_height - self.radius:
             self.speed_x = self.speed_x * elasticity_parallel
+            self.speed_y = -self.speed_y * elasticity_ortogonal
             if self.y < self.radius:
                 self.y = self.radius
             else:
@@ -140,41 +124,43 @@ class Bullet:
 
 class Cannon:
     '''
-    Defines cannon
+    Defines a cannon
     '''
     
-    def __init__(self, ammo: int, color_list: list, direction: int, speed: int, length: int, x: int, y: int, width: int):
+    def __init__(self):
         '''
         Cannon params
-        ammo is amount of bullets left
-        color_list is list of all colors in game
-        direction is angle belween x axis and nozzle in [degrees]
-        speed is bullet speed after shooting in [px / s]
-        length in [px]
-        Zero point is top point of gun on the side opposite to the nozzle
-        x is x coordinate of zero point in [px]
-        y is y coordinate of zero point in [px]
-        width in [px]
         '''
         
-        self.ammo = ammo
-        self.color_list = color_list
-        self.direction = direction * m.pi / 180
-        self.speed = speed
-        self.length = length
-        self.x = x
-        self.y = y
-        self.width = width
+        self.bullets_amount = bullets_amount
+        self.bullets_amount_text = bullets_amount_text
+        self.bullet_speed = bullet_speed
+        self.bullet_speed_max = bullet_speed_max
+        self.bullet_speed_step = bullet_speed_step
+        self.bullet_speed_text = bullet_speed_text
+        self.bullet_time_to_live = bullet_time_to_live
+        colors_amount = len(color_list)
+        self.color = color_list[randint(1, colors_amount - 1)] # Random color from color_list but not black
+        self.direction = cannon_direction
+        self.font = font
+        self.font_size = font_size
+        self.height = cannon_height
+        self.smoothing = text_smoothing
+        self.text_x = text_x
+        self.text_y = text_y
+        self.x = cannon_x
+        self.y = cannon_y
+        self.width = cannon_width
     
     def aim(self):
         '''
         Aims the cannon to the mouse
         '''
         
-        mouse_x = pygame.mouse.get_pos()[0]
-        mouse_y = pygame.mouse.get_pos()[1]
-        delta_x = mouse_x - self.x
-        delta_y = self.y - mouse_y
+        aim_x = pygame.mouse.get_pos()[0]
+        aim_y = pygame.mouse.get_pos()[1]
+        delta_x = aim_x - self.x
+        delta_y = self.y - aim_y
         if delta_x != 0:
             real_direction = m.atan(delta_y / delta_x)
             self.direction = max(0, min(m.pi, real_direction))
@@ -184,14 +170,16 @@ class Cannon:
         Increases bullet's speed
         '''
         
-        self.speed = self.speed + 10
+        if self.bullet_speed < self.bullet_speed_max:
+            self.bullet_speed = self.bullet_speed + self.bullet_speed_step
     
     def discharge(self):
         '''
         Decreases bullet's speed
         '''
         
-        self.speed = self.speed - 10
+        if self.bullet_speed > 0:
+            self.bullet_speed = self.bullet_speed - self.bullet_speed_step
         
     def draw(self):
         '''
@@ -200,17 +188,28 @@ class Cannon:
         
         # Var simplification
         d = self.direction
-        l = self.length
+        h = self.height
         x = self.x
         y = self.y
         w = self.width
         
-        colors_amount = len(self.color_list)
-        color = self.color_list[randint(1, colors_amount - 1)]
-        polygon(screen, color, [(x, y),
-                                (x + int(l * m.cos(d)), y - int(l * m.sin(d))),
-                                (x + int(l * m.cos(d) + w * m.sin(d)), y - int(l * m.sin(d) - w * m.cos(d))),
-                                (x + int(w * m.sin(d)), y + int(w * m.cos(d)))])
+        polygon(screen, self.color, [(x, y),
+                                     (x + int(w * m.cos(d)), y - int(w * m.sin(d))),
+                                     (x + int(w * m.cos(d) + h * m.sin(d)), y - int(w * m.sin(d) - h * m.cos(d))),
+                                     (x + int(h * m.sin(d)), y + int(h * m.cos(d)))])
+        
+    def hud_text(self):
+        '''
+        Texsts the main cannon's params on the screen
+        '''
+        
+        bullet_speed_text = self.bullet_speed_text + str(self.bullet_speed)
+        bullets_amount_text = self.bullets_amount_text + str(self.bullets_amount)
+        font = pygame.font.Font(self.font, self.font_size)
+        text_list = [bullet_speed_text, bullets_amount_text]
+        for text_number in range(len(text_list)):
+            text = font.render(text_list[text_number], self.smoothing, self.color)
+            screen.blit(text, (self.text_x, self.text_y + self.font_size * text_number))
         
     def shoot(self):
         '''
@@ -220,86 +219,63 @@ class Cannon:
         # Var simplification
         d = self.direction
         
-        if self.ammo > 0:
-            colors_amount = len(self.color_list)
-            color = self.color_list[randint(1, colors_amount - 1)]
-            x = self.x + int(self.length * m.cos(d) + self.width * (m.sin(d) - m.cos(d)) / 2)
-            y = self.y - int(self.length * m.sin(d) - self.width * (m.cos(d) + m.sin(d)) / 2)
-            speed_x = self.speed * m.cos(d)
-            speed_y = -self.speed * m.sin(d)
-            bullet = Bullet(color, speed_x, speed_y, self.width // 2, time_to_live, x, y)
+        if self.bullets_amount > 0:
+            bullet_radius = self.height // 2
+            bullet_x = self.x + int(self.width * m.cos(d) + self.height * (m.sin(d) - m.cos(d)) / 2)
+            bullet_y = self.y - int(self.width * m.sin(d) - self.height * (m.cos(d) + m.sin(d)) / 2)
+            bullet_speed_x = self.bullet_speed * m.cos(d)
+            bullet_speed_y = -self.bullet_speed * m.sin(d)
+            bullet = Bullet(bullet_speed_x, bullet_speed_y, bullet_x, bullet_y)
             bullet_list.append(bullet)
-            self.ammo = self.ammo - 1
-        
-class Text:
+            self.bullets_amount = self.bullets_amount - 1
+            
+            
+def process_screen(finished: bool):
     '''
-    Defines text information
+    Manages screen events
     '''
     
-    def __init__(self, color: list, font: str, size: int, smoothing: bool, text: str, x: int, y: int):
-        '''
-        Text params
-        color_list is 3 RGB values
-        font is font of the text
-        size in [px]
-        smoothing defines if it's needed to smooth the text
-        text is message to print
-        Zero point is top left point of the text
-        x is x coordinate of zero point in [px]
-        y is y coordinate of zero point in [px]
-        '''
-        
-        self.color = color
-        self.font = font
-        self.size = size
-        self.smoothing = smoothing
-        self.text = text
-        self.x = x
-        self.y = y
-    
-    def hud_text(self):
-        '''
-        Prints text on the screen
-        '''
-        
-        if self.smoothing == True:
-            smoothing = 1
-        else:
-            smoothing = 0
-        font = pygame.font.Font(self.font, self.size)
-        speed = font.render(self.text, smoothing, self.color)
-        screen.blit(speed, (self.x, self.y))
-        
-
-cannon = Cannon(ammo_amount, color_list, cannon_direction, cannon_speed, cannon_length, cannon_x, cannon_y, cannon_width)
-
-while not finished:
+    pygame.display.update()
     clock.tick(FPS)
     screen.fill(color_list[0])
-    bullet_speed = Text(color_list[1], font, text_size, smoothing, cannon_speed_text + str(cannon.speed) + ' / ' + str(cannon_max_speed), c_s_t_x, c_s_t_y)
-    bullet_d = Text(color_list[1], font, text_size, smoothing, cannon_d_text + str(int(round(cannon.direction * 180 / m.pi))), c_d_t_x, c_d_t_y)
-    bullet_amount = Text(color_list[1], font, text_size, smoothing, ammo_text + str(cannon.ammo), ammo_text_x, ammo_text_y)
-    bullet_speed.hud_text()
-    bullet_d.hud_text()
-    bullet_amount.hud_text()
-    for bullet in bullet_list:
-        if bullet.time_to_live == 0:
-            bullet_list.remove(bullet)
-    for bullet in bullet_list:
-        bullet.move()
-    cannon.draw()
-    cannon.aim()
-    pygame.display.update()
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_s] and cannon.speed > 0:
+    if keys[pygame.K_s] and cannon.bullet_speed > 0:
         cannon.discharge()
-    elif keys[pygame.K_w] and cannon.speed < cannon_max_speed:
+    elif keys[pygame.K_w]:
         cannon.charge()
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 cannon.shoot()
-            elif event.key == pygame.K_ESCAPE:
+            if event.key == pygame.K_ESCAPE:
                 finished = True
+    return finished
+            
+            
+def process_bullets():
+    '''
+    Manages bullets events
+    '''
 
+    for bullet in bullet_list:
+        if bullet.time_to_live == 0:
+            bullet_list.remove(bullet)
+    for bullet in bullet_list:
+        bullet.move()
+        
+    
+def process_cannon():
+    '''
+    Manages cannon events
+    '''
+    
+    cannon.aim()
+    cannon.draw()
+    cannon.hud_text()
+        
+cannon = Cannon()
+while not finished:
+    finished = process_screen(finished)
+    process_cannon()
+    process_bullets()
 pygame.quit()
