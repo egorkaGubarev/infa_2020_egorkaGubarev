@@ -24,32 +24,38 @@ finished = False
 
 # Interface
 bullets_amount_text = 'Bullets left: '
+bullet_mode = 'shell'
 bullet_speed_text = 'Start bullet speed [px / s]: '
+cannon_mode_text = 'Mode: '
 font = 'MTCORSVA.TTF'
 font_size = 36
+shells_amount_text = 'Shells left: '
 text_smoothing = True
 text_x = 0
 text_y = 0
-tutorial_text_w = 'Press and hold W to increase bullet speed'
-tutorial_text_s = 'Press and hold S to decrease bullet speed'
+tutorial_text_enter = 'Press Enter to start the game'
+tutorial_text_escape = 'Press Esc to leave the game'
+tutorial_text_l_shift = 'Press left Shift to switch cannon mode'
 tutorial_text_mouse = 'Move the mouse to aim the cannon'
-tutorial_text_space = 'Press SPACE to shoot the cannon'
-tutorial_text_escape = 'Press ESCAPE to leave the game'
-tutorial_text_enter = 'Press ENTER to start the game'
+tutorial_text_s = 'Press and hold S to decrease bullet speed'
+tutorial_text_space = 'Press Space to shoot the cannon'
+tutorial_text_w = 'Press and hold W to increase bullet speed'
 
 # -Objects-
 
 # Bullet
-bullets_amount = 50
+bullets_amount = 500
 bullet_list = []
 bullet_speed = 0
 bullet_speed_max = 740
-bullet_speed_step = 1
+bullet_speed_step = 10
 bullet_time_to_live = 10
+shells_amount = 50
 
 # Cannon
 cannon_direction = 0
 cannon_height = 25
+cannon_mode = 'heavy gun'
 cannon_x = 0
 cannon_y = screen_height - cannon_height
 cannon_width = 100
@@ -65,12 +71,13 @@ class Bullet:
     Defines bullet
     '''
     
-    def __init__(self, speed_x: int, speed_y: int, x: int, y: int):
+    def __init__(self, mode: str, speed_x: int, speed_y: int, x: int, y: int):
         '''
         Bullet params
         '''
         
         self.color = cannon.color
+        self.mode = mode
         self.radius = cannon.height // 2
         self.speed_x = speed_x
         self.speed_y = speed_y
@@ -82,8 +89,11 @@ class Bullet:
         '''
         Draws bullet on the screen
         '''
-        
-        circle(screen, self.color, (int(self.x), int(self.y)), self.radius)
+        if self.mode == 'shell':
+            radius = self.radius
+        elif self.mode == 'bullet':
+            radius = self.radius // 2
+        circle(screen, self.color, (int(self.x), int(self.y)), radius)
         
     def decrease_lifetime(self):
         '''
@@ -150,6 +160,10 @@ class Cannon:
         self.font = font
         self.font_size = font_size
         self.height = cannon_height
+        self.mode = cannon_mode
+        self.mode_text = cannon_mode_text
+        self.shells_amount = shells_amount
+        self.shells_amount_text = shells_amount_text
         self.smoothing = text_smoothing
         self.text_x = text_x
         self.text_y = text_y
@@ -210,8 +224,10 @@ class Cannon:
         
         bullet_speed_text = self.bullet_speed_text + str(self.bullet_speed)
         bullets_amount_text = self.bullets_amount_text + str(self.bullets_amount)
+        shells_amount_text = self.shells_amount_text + str(self.shells_amount)
+        mode_text = self.mode_text + str(self.mode)
         font = pygame.font.Font(self.font, self.font_size)
-        text_list = [bullet_speed_text, bullets_amount_text]
+        text_list = [bullet_speed_text, shells_amount_text, bullets_amount_text, mode_text]
         for text_number in range(len(text_list)):
             text = font.render(text_list[text_number], self.smoothing, self.color)
             screen.blit(text, (self.text_x, self.text_y + self.font_size * text_number))
@@ -224,15 +240,32 @@ class Cannon:
         # Var simplification
         d = self.direction
         
-        if self.bullets_amount > 0:
+        if self.shells_amount > 0 and self.mode == 'heavy gun' or self.bullets_amount > 0 and self.mode == 'machine gun':
             bullet_radius = self.height // 2
             bullet_x = self.x + int(self.width * m.cos(d) + self.height * (m.sin(d) - m.cos(d)) / 2)
             bullet_y = self.y - int(self.width * m.sin(d) - self.height * (m.cos(d) + m.sin(d)) / 2)
             bullet_speed_x = self.bullet_speed * m.cos(d)
             bullet_speed_y = -self.bullet_speed * m.sin(d)
-            bullet = Bullet(bullet_speed_x, bullet_speed_y, bullet_x, bullet_y)
+            if self.mode == 'heavy gun':
+                bullet_mode = 'shell'
+                self.shells_amount = self.shells_amount - 1
+            elif self.mode == 'machine gun':
+                self.bullets_amount = self.bullets_amount - 1
+                bullet_mode = 'bullet'
+                bullet_speed_x = bullet_speed_x * 2
+                bullet_speed_y = bullet_speed_y * 2
+            bullet = Bullet(bullet_mode, bullet_speed_x, bullet_speed_y, bullet_x, bullet_y)
             bullet_list.append(bullet)
-            self.bullets_amount = self.bullets_amount - 1
+            
+    def switch_mode(self):
+        '''
+        Switches shooting system of the cannon
+        '''
+        
+        if self.mode == 'heavy gun':
+            self.mode = 'machine gun'
+        else:
+            self.mode = 'heavy gun'
 
             
 class Message:
@@ -248,13 +281,15 @@ class Message:
         self.color = color_list[1] # Green
         self.font = font
         self.font_size = font_size
+        self.finished = finished
         self.smoothing = text_smoothing
-        self.text_w = tutorial_text_w
-        self.text_s = tutorial_text_s
-        self.text_mouse = tutorial_text_mouse
-        self.text_space = tutorial_text_space
-        self.text_escape = tutorial_text_escape
         self.text_enter = tutorial_text_enter
+        self.text_escape = tutorial_text_escape
+        self.text_l_shift = tutorial_text_l_shift
+        self.text_mouse = tutorial_text_mouse
+        self.text_s = tutorial_text_s
+        self.text_space = tutorial_text_space
+        self.text_w = tutorial_text_w
         self.x = text_x
         self.y = text_y
         
@@ -265,7 +300,7 @@ class Message:
         
         
         skipped = False
-        tutorial_text_list = [self.text_w, self.text_s, self.text_mouse,
+        tutorial_text_list = [self.text_w, self.text_s, self.text_mouse, self.text_l_shift,
                               self.text_space, self.text_escape, self.text_enter]
         font = pygame.font.Font(self.font, self.font_size)
         for text_number in range(len(tutorial_text_list)):
@@ -277,6 +312,9 @@ class Message:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
                         skipped = True
+                    elif event.key == pygame.K_ESCAPE:
+                        skipped = True
+                        self.finished = True
             
             
 def process_setup_events():
@@ -286,6 +324,11 @@ def process_setup_events():
     
     tutorial = Message()
     tutorial.show_tutorial()
+    if tutorial.finished:
+        finished = True
+    else:
+        finished = False
+    return finished
     
             
 def process_screen(finished: bool):
@@ -301,10 +344,16 @@ def process_screen(finished: bool):
         cannon.discharge()
     elif keys[pygame.K_w]:
         cannon.charge()
+    if cannon.mode == 'machine gun':
+        if keys[pygame.K_SPACE]:
+            cannon.shoot()
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                cannon.shoot()
+            if cannon.mode == 'heavy gun':
+                if event.key == pygame.K_SPACE:
+                    cannon.shoot()
+            if event.key == pygame.K_LSHIFT:
+                cannon.switch_mode()
             if event.key == pygame.K_ESCAPE:
                 finished = True
     return finished
@@ -332,7 +381,7 @@ def process_cannon():
     cannon.hud_text()
         
 
-process_setup_events()
+finished = process_setup_events()
 cannon = Cannon()
 while not finished:
     finished = process_screen(finished)
