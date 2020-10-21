@@ -30,7 +30,7 @@ text_size = 36
 # -Objects-
 
 # Bullet
-time_to_live = 1
+time_to_live = 10
 bullet_list = []
 
 # Cannon
@@ -54,6 +54,8 @@ cannon_y = screen_height - cannon_width
 
 # Physics
 dt = 1/FPS # Integral step in [s]
+elasticity_ortogonal = 1 / 2
+elasticity_parallel = 3 / 4
 g = 200 # Free fall acceleration in [px / s^2]
 
 class Bullet:
@@ -102,11 +104,39 @@ class Bullet:
         Moves the bullet over the screen
         '''
         
+        wall = ''
+        if self.x < self.radius or self.x > screen_width - self.radius:
+            wall = 'x'
+            self.reflect(wall)
+        if self.y < self.radius or self.y > screen_height - self.radius:
+            wall = 'y'
+            self.reflect(wall)
         self.speed_y = self.speed_y + g * dt
         self.x = self.x + self.speed_x * dt
         self.y = self.y + self.speed_y * dt
         self.draw()
         self.decrease_lifetime()
+        
+    def reflect(self, wall: str):
+        '''
+        Makes reflections from walls
+        speed is 'x' or 'y'
+        '''
+        
+        if wall == 'x':
+            self.speed_x = -self.speed_x * elasticity_ortogonal
+            self.speed_y = self.speed_y * elasticity_parallel
+            if self.x < self.radius:
+                self.x = self.radius
+            else:
+                self.x = screen_width - self.radius
+        elif wall == 'y':
+            self.speed_y = -self.speed_y * elasticity_ortogonal
+            self.speed_x = self.speed_x * elasticity_parallel
+            if self.y < self.radius:
+                self.y = self.radius
+            else:
+                self.y = screen_height - self.radius
 
 class Cannon:
     '''
