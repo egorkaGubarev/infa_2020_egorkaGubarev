@@ -12,7 +12,7 @@ pygame.init()
 # Graphic
 FPS = 24
 color_list = [(0, 0, 0), # Black
-              (255, 0, 0), # Red
+              (0, 255, 0), # Green
              ]
 screen_width = 1519
 screen_height = 754
@@ -290,13 +290,14 @@ while not finished:
     cannon.draw()
     cannon.aim()
     pygame.display.update()
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_s] and cannon.speed > 0:
+        cannon.discharge()
+    elif keys[pygame.K_w] and cannon.speed < cannon_max_speed:
+        cannon.charge()
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_s and cannon.speed > 0:
-                cannon.discharge()
-            elif event.key == pygame.K_w and cannon.speed < cannon_max_speed:
-                cannon.charge()
-            elif event.key == pygame.K_SPACE:
+            if event.key == pygame.K_SPACE:
                 cannon.shoot()
             elif event.key == pygame.K_ESCAPE:
                 finished = True
