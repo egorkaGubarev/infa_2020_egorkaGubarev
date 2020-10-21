@@ -30,6 +30,12 @@ font_size = 36
 text_smoothing = True
 text_x = 0
 text_y = 0
+tutorial_text_w = 'Press and hold W to increase bullet speed'
+tutorial_text_s = 'Press and hold S to decrease bullet speed'
+tutorial_text_mouse = 'Move the mouse to aim the cannon'
+tutorial_text_space = 'Press SPACE to shoot the cannon'
+tutorial_text_escape = 'Press ESCAPE to leave the game'
+tutorial_text_enter = 'Press ENTER to start the game'
 
 # -Objects-
 
@@ -38,7 +44,7 @@ bullets_amount = 50
 bullet_list = []
 bullet_speed = 0
 bullet_speed_max = 740
-bullet_speed_step = 10
+bullet_speed_step = 1
 bullet_time_to_live = 10
 
 # Cannon
@@ -139,8 +145,7 @@ class Cannon:
         self.bullet_speed_step = bullet_speed_step
         self.bullet_speed_text = bullet_speed_text
         self.bullet_time_to_live = bullet_time_to_live
-        colors_amount = len(color_list)
-        self.color = color_list[randint(1, colors_amount - 1)] # Random color from color_list but not black
+        self.color = color_list[1] # Green
         self.direction = cannon_direction
         self.font = font
         self.font_size = font_size
@@ -228,7 +233,60 @@ class Cannon:
             bullet = Bullet(bullet_speed_x, bullet_speed_y, bullet_x, bullet_y)
             bullet_list.append(bullet)
             self.bullets_amount = self.bullets_amount - 1
+
             
+class Message:
+    '''
+    Defines text messages on the screen
+    '''
+    
+    def __init__(self):
+        '''
+        Messages params
+        '''
+        
+        self.color = color_list[1] # Green
+        self.font = font
+        self.font_size = font_size
+        self.smoothing = text_smoothing
+        self.text_w = tutorial_text_w
+        self.text_s = tutorial_text_s
+        self.text_mouse = tutorial_text_mouse
+        self.text_space = tutorial_text_space
+        self.text_escape = tutorial_text_escape
+        self.text_enter = tutorial_text_enter
+        self.x = text_x
+        self.y = text_y
+        
+    def show_tutorial(self):
+        '''
+        Displays control tutorial
+        '''
+        
+        
+        skipped = False
+        tutorial_text_list = [self.text_w, self.text_s, self.text_mouse,
+                              self.text_space, self.text_escape, self.text_enter]
+        font = pygame.font.Font(self.font, self.font_size)
+        for text_number in range(len(tutorial_text_list)):
+            text = font.render(tutorial_text_list[text_number], self.smoothing, self.color)
+            screen.blit(text, (self.x, self.y + self.font_size * text_number))
+        pygame.display.update()
+        while not skipped:
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        skipped = True
+            
+            
+def process_setup_events():
+    '''
+    Manages setup events
+    '''
+    
+    tutorial = Message()
+    tutorial.show_tutorial()
+    
             
 def process_screen(finished: bool):
     '''
@@ -273,6 +331,8 @@ def process_cannon():
     cannon.draw()
     cannon.hud_text()
         
+
+process_setup_events()
 cannon = Cannon()
 while not finished:
     finished = process_screen(finished)
