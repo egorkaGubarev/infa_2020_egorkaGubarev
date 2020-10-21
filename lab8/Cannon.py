@@ -19,8 +19,8 @@ screen_height = 754
 screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN)
 
 # Logic
-finished = False
 clock = pygame.time.Clock()
+finished = False
 
 # Interface
 font = 'MTCORSVA.TTF'
@@ -30,6 +30,7 @@ text_size = 36
 # -Objects-
 
 # Bullet
+time_to_live = 1
 bullet_list = []
 
 # Cannon
@@ -60,12 +61,13 @@ class Bullet:
     Defines bullet
     '''
     
-    def __init__(self, color: list, speed_x: int, speed_y: int, radius: int, x: int, y: int):
+    def __init__(self, color: list, speed_x: int, speed_y: int, radius: int, time_to_live: int, x: int, y: int):
         '''
         Bullet params
         color is list of 3 RGB values
         speed is bullet speed after shooting in [px / s]
         radius im [px]
+        time_to_live in [s]
         speed_x in [px / s] in x axis
         speed_y in [px / s] in y axis
         Zero point is centre of a bullet
@@ -77,6 +79,7 @@ class Bullet:
         self.speed_x = speed_x
         self.speed_y = speed_y
         self.radius = radius
+        self.time_to_live = time_to_live * FPS
         self.x = x
         self.y = y
         
@@ -87,6 +90,13 @@ class Bullet:
         
         circle(screen, self.color, (int(self.x), int(self.y)), self.radius)
         
+    def decrease_lifetime(self):
+        '''
+        Decreases time_to_live
+        '''
+        
+        self.time_to_live = self.time_to_live - 1
+        
     def move(self):
         '''
         Moves the bullet over the screen
@@ -96,6 +106,7 @@ class Bullet:
         self.x = self.x + self.speed_x * dt
         self.y = self.y + self.speed_y * dt
         self.draw()
+        self.decrease_lifetime()
 
 class Cannon:
     '''
@@ -140,14 +151,14 @@ class Cannon:
     
     def charge(self):
         '''
-        Increaces bullet's speed
+        Increases bullet's speed
         '''
         
         self.speed = self.speed + 10
     
     def discharge(self):
         '''
-        Decreaces bullet's speed
+        Decreases bullet's speed
         '''
         
         self.speed = self.speed - 10
@@ -186,7 +197,7 @@ class Cannon:
             y = self.y - int(self.length * m.sin(d) - self.width * (m.cos(d) + m.sin(d)) / 2)
             speed_x = self.speed * m.cos(d)
             speed_y = -self.speed * m.sin(d)
-            bullet = Bullet(color, speed_x, speed_y, self.width // 2, x, y)
+            bullet = Bullet(color, speed_x, speed_y, self.width // 2, time_to_live, x, y)
             bullet_list.append(bullet)
             self.ammo = self.ammo - 1
         
@@ -241,6 +252,9 @@ while not finished:
     bullet_speed.hud_text()
     bullet_d.hud_text()
     bullet_amount.hud_text()
+    for bullet in bullet_list:
+        if bullet.time_to_live == 0:
+            bullet_list.remove(bullet)
     for bullet in bullet_list:
         bullet.move()
     cannon.draw()
