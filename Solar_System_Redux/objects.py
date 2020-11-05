@@ -24,6 +24,15 @@ class Simulation:
         self.space_bodies_list: list = []  # Список космических тел
         self.status: str = 'Created'  # Симуляция создана
 
+    def convert_coordinates(self):
+        """
+        Преобразует физические координаты и скорости в [м] и [м/с] в экранные в [px] и [px/с]
+        """
+
+        # FIXME Надо сделать egorkaGubarev
+
+        pass
+
     def create_log_file(self):
         """
         Создаёт файл для записи информации
@@ -140,7 +149,7 @@ class Simulation:
         """
         Обрабатывает графические события в симуляции
         """
-        
+
         # FIXME Надо сделать egorkaGubarev
 
         pass
