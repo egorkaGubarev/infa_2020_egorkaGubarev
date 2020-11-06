@@ -2,6 +2,7 @@
 Модуль типов данных. Содержит классы
 """
 
+import math
 import pygame
 
 
@@ -33,15 +34,32 @@ class Simulation:
 
         pass
 
+    @staticmethod
+    def count_distance(x_1: float, x_2: float, y_1: float, y_2: float):
+        """
+        Вычисляет расстояние между 2 точками
+
+        x_1 - x коодината 1 точки
+        x_2 - x координата 2 точки
+        y_1 - y координата 1 точки
+        y_2 - у координата 2 точки
+        """
+
+        distance = math.sqrt((x_1 - x_2)**2 + (y_1 - y_2)**2)  # Расстояние между точками
+        return distance
+
     def count_scale(self):
         """
         Вычисляет масштаб графического окна
         """
 
-        # sun_available_distance_x_right: float = self.screen_width - sun_x
-        # max_sun_distance: float = 0  # Максимальное возможное физическое расстояние от Солнца до тела [м]
-        # for space_body in self.space_bodies_list:
-        #     pass
+        sun_available_distance_x: float = self.screen_width // 2  # Свободное экранное пространство по горизонтали
+        sun_available_distance_y: float = self.screen_height // 2  # Свободное экранное пространство по вертикали
+        max_sun_distance: float = 0  # Максимальное возможное физическое расстояние от Солнца до тела [м]
+        for space_body in self.space_bodies_list:
+            x = space_body.x  # Физическая координата тела по оси x в [м]
+            y = space_body.y  # Физическая координата тела по оси y в [м]
+            sun_distance = self.count_distance(0, x, 0, y)  # Физическое расстояние от Солнца до тела в [м]
 
         # FIXME доделать egorkaGubarev
 
@@ -135,16 +153,23 @@ class Simulation:
             speed_y_string: str = new_space_body_params_separated[5]
 
             speed_y: float = float(speed_y_string)  # Физическая скорость тела вдоль оси y в [м/с]
+            if name != 'Sun':
 
-            # Строка с физической координатой тела по оси x в [м]
-            x_string: str = new_space_body_params_separated[5]
+                # Строка с физической координатой тела по оси x в [м]
+                x_string: str = new_space_body_params_separated[5]
 
-            x: int = int(x_string)  # Физическая координата тела по оси x в [м]
+                x: int = int(x_string)  # Физическая координата тела по оси x в [м]
 
-            # Строка с физической координатой тела по оси y в [м]
-            y_string: str = new_space_body_params_separated[5]
+                # Строка с физической координатой тела по оси y в [м]
+                y_string: str = new_space_body_params_separated[5]
 
-            y: int = int(y_string)  # Физическая координата тела по оси y в [м]
+                y: int = int(y_string)  # Физическая координата тела по оси y в [м]
+            else:
+
+                #  По определению физических координат, у Солнца они нулевые
+                x: int = 0
+                y: int = 0
+
             self.create_space_body(color, mass, name, radius, speed_x, speed_y, x, y)
         init.close()
 
