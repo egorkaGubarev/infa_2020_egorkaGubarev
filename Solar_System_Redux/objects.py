@@ -20,6 +20,7 @@ class Simulation:
         self.fps: int = 24  # 24 кадра в секунду
         self.init_file_name: str = 'init.txt'  # Файл для чтения информации
         self.log_file_name: str = 'log.txt'  # Файл для записи информации
+        self.scale: float = 0  # Определяется в методе self.count_scale
         self.screen_height: int = 800  # Высота экрана 800 [px]
         self.screen_width: int = 1500  # Ширина экрана 1500 [px]
         self.space_bodies_list: list = []  # Список космических тел
@@ -50,18 +51,26 @@ class Simulation:
 
     def count_scale(self):
         """
-        Вычисляет масштаб графического окна
+        Вычисляет масштаб графического окна в [м/px]
         """
 
-        sun_available_distance_x: float = self.screen_width // 2  # Свободное экранное пространство по горизонтали
-        sun_available_distance_y: float = self.screen_height // 2  # Свободное экранное пространство по вертикали
+        # Свободное экранное пространство по горизонтали в [px]
+        sun_available_distance_x: float = self.screen_width // 2
+
+        sun_available_distance_y: float = self.screen_height // 2  # Свободное экранное пространство по вертикали в [px]
+
+        # Свободное экранное пространство в [px]
+        sun_available_distance: float = min(sun_available_distance_x, sun_available_distance_y)
+
         max_sun_distance: float = 0  # Максимальное возможное физическое расстояние от Солнца до тела [м]
         for space_body in self.space_bodies_list:
             x = space_body.x  # Физическая координата тела по оси x в [м]
             y = space_body.y  # Физическая координата тела по оси y в [м]
             sun_distance = self.count_distance(0, x, 0, y)  # Физическое расстояние от Солнца до тела в [м]
-
-        # FIXME доделать egorkaGubarev
+            if sun_distance > max_sun_distance:
+                max_sun_distance: float = sun_distance  # Поиск максимального физического расстояния до Солнца в [м]
+        scale: float = max_sun_distance / sun_available_distance  # Масштаб в [м/px]
+        return scale
 
     def create_log_file(self):
         """
@@ -88,9 +97,9 @@ class Simulation:
         mass - масса в [кг]
         name - название
         radius - экранный радиус в [px]
-        Начало координат - верхний левый угол экрана
+        Начало координат - центр экрана
         Ось x горизонтально вправо
-        Ось y вертикально вниз
+        Ось y вертикально вверх
         speed_x - физическая скорость вдоль оси x в [м/с]
         speed_y - физическая скорость вдоль оси y в [м/с]
         x - физическая координата x в [м]
@@ -99,16 +108,6 @@ class Simulation:
 
         new_space_body = SpaceBody(color, mass, name, radius, speed_x, speed_y, x, y)
         self.space_bodies_list.append(new_space_body)
-
-    def find_sun(self):
-        """
-        Ищет Солнце в списке космических тел
-        """
-
-        index: int = 0  # Идекс для поиска Солнца в списке
-        while self.space_bodies_list[index].name != 'Sun':
-            index += 1
-        return index
 
     def log_information(self):
         """
@@ -156,12 +155,12 @@ class Simulation:
             if name != 'Sun':
 
                 # Строка с физической координатой тела по оси x в [м]
-                x_string: str = new_space_body_params_separated[5]
+                x_string: str = new_space_body_params_separated[6]
 
                 x: int = int(x_string)  # Физическая координата тела по оси x в [м]
 
                 # Строка с физической координатой тела по оси y в [м]
-                y_string: str = new_space_body_params_separated[5]
+                y_string: str = new_space_body_params_separated[7]
 
                 y: int = int(y_string)  # Физическая координата тела по оси y в [м]
             else:
@@ -180,7 +179,7 @@ class Simulation:
 
         self.status: str = 'run'  # Симуляция запущена
         self.read_information()
-        self.find_sun()
+        self.scale = self.count_scale()  # Масштаб в [м/px]
         self.create_log_file()
 
     def update_logic(self):
@@ -227,9 +226,9 @@ class SpaceBody:
         mass - масса в [кг]
         name - название
         radius - экранный радиус в [px]
-        Начало координат - верхний левый угол экрана
+        Начало координат - центр экрана
         Ось x горизонтально вправо
-        Ось y вертикально вниз
+        Ось y вертикально вверх
         speed_x - физическая скорость по оси x в [м/с]
         speed_y - физическая скорость по оси y в [м/с]
         x - физическая координата центра по оси x в [м]
