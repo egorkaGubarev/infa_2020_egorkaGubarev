@@ -33,6 +33,18 @@ class Simulation:
 
         pass
 
+    def count_scale(self):
+        """
+        Вычисляет масштаб графического окна
+        """
+
+        # sun_available_distance_x_right: float = self.screen_width - sun_x
+        # max_sun_distance: float = 0  # Максимальное возможное физическое расстояние от Солнца до тела [м]
+        # for space_body in self.space_bodies_list:
+        #     pass
+
+        # FIXME доделать egorkaGubarev
+
     def create_log_file(self):
         """
         Создаёт файл для записи информации
@@ -70,6 +82,16 @@ class Simulation:
         new_space_body = SpaceBody(color, mass, name, radius, speed_x, speed_y, x, y)
         self.space_bodies_list.append(new_space_body)
 
+    def find_sun(self):
+        """
+        Ищет Солнце в списке космических тел
+        """
+
+        index: int = 0  # Идекс для поиска Солнца в списке
+        while self.space_bodies_list[index].name != 'Sun':
+            index += 1
+        return index
+
     def log_information(self):
         """
         Записывает информацию о симуляции в файл
@@ -99,7 +121,8 @@ class Simulation:
             color: tuple = tuple(color_string)  # Цвет тела в формате RGB
             mass_string: str = new_space_body_params_separated[1]  # Строка с массой тела в [кг]
             mass: float = float(mass_string)  # Масса тела в [кг]
-            name: str = new_space_body_params_separated[2]  # Название тела
+            name_string: str = new_space_body_params_separated[2]  # Строка с названием тела
+            name: str = name_string[1:]  # Название тела без пробела в начале
             radius_string: str = new_space_body_params_separated[3]  # Строка с экранным радиусом тела в [px]
             radius: int = int(radius_string)  # Экранный радиус тела в [px]
 
@@ -132,6 +155,7 @@ class Simulation:
 
         self.status: str = 'run'  # Симуляция запущена
         self.read_information()
+        self.find_sun()
         self.create_log_file()
 
     def update_logic(self):
