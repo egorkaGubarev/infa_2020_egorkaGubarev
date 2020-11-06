@@ -154,32 +154,34 @@ class Simulation:
             name: str = name_string[1:]  # Название тела без пробела в начале
             radius_string: str = new_space_body_params_separated[3]  # Строка с экранным радиусом тела в [px]
             radius: int = int(radius_string)  # Экранный радиус тела в [px]
-
-            # Строка с физической скоростью тела вдоль оси x в [м/с]
-            speed_x_string: str = new_space_body_params_separated[4]
-
-            speed_x: float = float(speed_x_string)  # Физическая скорость тела вдоль оси x в [м/с]
-
-            # Строка с физической скоростью тела вдоль оси y в [м/с]
-            speed_y_string: str = new_space_body_params_separated[5]
-
-            speed_y: float = float(speed_y_string)  # Физическая скорость тела вдоль оси y в [м/с]
             if name != 'Sun':
+
+                # Строка с физической скоростью тела вдоль оси x в [м/с]
+                speed_x_string: str = new_space_body_params_separated[4]
+
+                speed_x: float = float(speed_x_string)  # Физическая скорость тела вдоль оси x в [м/с]
+
+                # Строка с физической скоростью тела вдоль оси y в [м/с]
+                speed_y_string: str = new_space_body_params_separated[5]
+
+                speed_y: float = float(speed_y_string)  # Физическая скорость тела вдоль оси y в [м/с]
 
                 # Строка с физической координатой тела по оси x в [м]
                 x_string: str = new_space_body_params_separated[6]
 
-                x: int = int(x_string)  # Физическая координата тела по оси x в [м]
+                x: float = float(x_string)  # Физическая координата тела по оси x в [м]
 
                 # Строка с физической координатой тела по оси y в [м]
                 y_string: str = new_space_body_params_separated[7]
 
-                y: int = int(y_string)  # Физическая координата тела по оси y в [м]
+                y: float = float(y_string)  # Физическая координата тела по оси y в [м]
             else:
 
-                #  По определению физических координат, у Солнца они нулевые
-                x: int = 0
-                y: int = 0
+                #  По определению физических координат и скоростей, у Солнца они нулевые
+                speed_x: float = 0
+                speed_y: float = 0
+                x: float = 0
+                y: float = 0
 
             self.create_space_body(color, mass, name, radius, speed_x, speed_y, x, y)
         init.close()
