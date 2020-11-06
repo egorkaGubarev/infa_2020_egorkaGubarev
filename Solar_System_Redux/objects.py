@@ -26,14 +26,26 @@ class Simulation:
         self.space_bodies_list: list = []  # Список космических тел
         self.status: str = 'Created'  # Симуляция создана
 
-    def convert_coordinates(self):
+    def convert_coordinates(self, space_body):
         """
         Преобразует физические координаты и скорости в [м] и [м/с] в экранные в [px] и [px/с]
+
+        space_body - космическое тело, координаты которого нао преобразовать
         """
 
-        # FIXME Надо сделать egorkaGubarev
+        speed_x: float = space_body.speed_x  # Физическая скорость тела вдоль оси x в [м/c]
+        speed_y: float = space_body.speed_y  # Физическая скорость тела вдоль оси y в [м/с]
+        x: float = space_body.x  # Физическая координата тела по оси x в [м]
+        y: float = space_body.y  # Физическя координата тела по оси y в [м]
+        screen_speed_x: int = int(speed_x / self.scale)  # Экранная скорость тела по оси x в [px/с]
+        screen_speed_y: int = int(speed_y / self.scale)  # Экранная скорость тела по оси y в [px/с]
+        screen_x: int = int(x / self.scale)  # Экранная координата тела по оси x в [px]
+        screen_y: int = int(y / self.scale)  # Экранная координата тела по оси y в [px]
 
-        pass
+        # Словарь экранных координат в [px/с] и [px]
+        screen_coordinates: dict = {'speed_x': screen_speed_x, 'speed_y': screen_speed_y, 'x': screen_x, 'y': screen_y}
+
+        return screen_coordinates
 
     @staticmethod
     def count_distance(x_1: float, x_2: float, y_1: float, y_2: float):
@@ -198,9 +210,16 @@ class Simulation:
         Обрабатывает графические события в симуляции
         """
 
-        # FIXME Надо сделать egorkaGubarev
+        for space_body in self.space_bodies_list:
 
-        pass
+            # Словарь экранных координат в [px/с] и [px]
+            screen_coordinates: dict = self.convert_coordinates(space_body)
+
+            name: str = space_body.name  # Название тела
+            x: int = screen_coordinates['x']  # Экранная координата тела по оси x в [px]
+            print('Name ->', name, 'x ->', x)
+        print('--- Simulation cycle ---')
+        # FIXME Надо доелать egorkaGubarev
 
     def update_physics(self):
         """
