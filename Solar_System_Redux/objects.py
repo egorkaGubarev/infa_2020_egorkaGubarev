@@ -5,6 +5,8 @@
 import math
 import pygame
 
+from pygame.draw import *
+
 
 class Simulation:
     """
@@ -17,10 +19,12 @@ class Simulation:
         """
 
         self.clock = pygame.time.Clock()  # Часы
+        self.colors: dict = {'black': (0, 0, 0)}  # Словарь цветов
         self.fps: int = 24  # 24 кадра в секунду
         self.init_file_name: str = 'init.txt'  # Файл для чтения информации
         self.log_file_name: str = 'log.txt'  # Файл для записи информации
         self.scale: float = 0  # Определяется в методе self.count_scale
+        self.screen = None  # Определяется в self.create_screen()
         self.screen_height: int = 800  # Высота экрана 800 [px]
         self.screen_width: int = 1500  # Ширина экрана 1500 [px]
         self.space_bodies_list: list = []  # Список космических тел
@@ -28,22 +32,30 @@ class Simulation:
 
     def convert_coordinates(self, space_body):
         """
-        Преобразует физические координаты и скорости в [м] и [м/с] в экранные в [px] и [px/с]
+        Преобразует физические координаты в [м] в экранные в [px]
 
-        space_body - космическое тело, координаты которого нао преобразовать
+        Центральная экранная система координат:
+        Начало - центр экрана
+        Ось x горизонтально вправо
+        Ось y вертикально вверх
+
+        Экранная система координат:
+        Начало - верхний левый угол экрана
+        Ось x горизонтально вправо
+        Ось y вертикально вниз
+
+        space_body - космическое тело, координаты которого надо преобразовать
         """
 
-        speed_x: float = space_body.speed_x  # Физическая скорость тела вдоль оси x в [м/c]
-        speed_y: float = space_body.speed_y  # Физическая скорость тела вдоль оси y в [м/с]
         x: float = space_body.x  # Физическая координата тела по оси x в [м]
         y: float = space_body.y  # Физическя координата тела по оси y в [м]
-        screen_speed_x: int = int(speed_x / self.scale)  # Экранная скорость тела по оси x в [px/с]
-        screen_speed_y: int = int(speed_y / self.scale)  # Экранная скорость тела по оси y в [px/с]
-        screen_x: int = int(x / self.scale)  # Экранная координата тела по оси x в [px]
-        screen_y: int = int(y / self.scale)  # Экранная координата тела по оси y в [px]
+        screen_x_center: int = int(x / self.scale)  # Центральная экранная координата тела по оси x в [px]
+        screen_y_center: int = int(y / self.scale)  # Центральная экранная координата тела по оси y в [px]
+        screen_x: int = screen_x_center + self.screen_width // 2  # Экранная координата тела по оси x в [px]
+        screen_y: int = self.screen_height // 2 - screen_y_center  # Экранная координата тела по оси y в [px]
 
-        # Словарь экранных координат в [px/с] и [px]
-        screen_coordinates: dict = {'speed_x': screen_speed_x, 'speed_y': screen_speed_y, 'x': screen_x, 'y': screen_y}
+        # Словарь экранных координат в [px]
+        screen_coordinates: dict = {'x': screen_x, 'y': screen_y}
 
         return screen_coordinates
 
@@ -58,7 +70,7 @@ class Simulation:
         y_2 - у координата 2 точки
         """
 
-        distance = math.sqrt((x_1 - x_2)**2 + (y_1 - y_2)**2)  # Расстояние между точками
+        distance: float = math.sqrt((x_1 - x_2)**2 + (y_1 - y_2)**2)  # Расстояние между точками
         return distance
 
     def count_scale(self):
@@ -76,9 +88,9 @@ class Simulation:
 
         max_sun_distance: float = 0  # Максимальное возможное физическое расстояние от Солнца до тела [м]
         for space_body in self.space_bodies_list:
-            x = space_body.x  # Физическая координата тела по оси x в [м]
-            y = space_body.y  # Физическая координата тела по оси y в [м]
-            sun_distance = self.count_distance(0, x, 0, y)  # Физическое расстояние от Солнца до тела в [м]
+            x: float = space_body.x  # Физическая координата тела по оси x в [м]
+            y: float = space_body.y  # Физическая координата тела по оси y в [м]
+            sun_distance: float = self.count_distance(0, x, 0, y)  # Физическое расстояние от Солнца до тела в [м]
             if sun_distance > max_sun_distance:
                 max_sun_distance: float = sun_distance  # Поиск максимального физического расстояния до Солнца в [м]
         scale: float = max_sun_distance / sun_available_distance  # Масштаб в [м/px]
@@ -97,21 +109,23 @@ class Simulation:
         Создаёт экран
         """
 
-        screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
-        return screen
+        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
+        return self.screen
 
     def create_space_body(self, color: tuple, mass: float, name: str, radius: int, speed_x: float, speed_y: float,
                           x: float, y: float):
         """
         Создаёт космическое тело
 
+        Физическая система координат:
+        Начало координат - центр экрана
+        Ось x горизонтально вправо
+        Ось y вертикально вверх
+
         color - цвет в формате RGB
         mass - масса в [кг]
         name - название
         radius - экранный радиус в [px]
-        Начало координат - центр экрана
-        Ось x горизонтально вправо
-        Ось y вертикально вверх
         speed_x - физическая скорость вдоль оси x в [м/с]
         speed_y - физическая скорость вдоль оси y в [м/с]
         x - физическая координата x в [м]
@@ -147,7 +161,14 @@ class Simulation:
             new_space_body_params_separated = new_space_body_params_stripped.split(';')
 
             color_string: str = new_space_body_params_separated[0]  # Строка с цветом тела в формате RGB
-            color: tuple = tuple(color_string)  # Цвет тела в формате RGB
+            color_string_components: list = color_string.split(',')  # Строка с компонентами цвета в формате RGB
+            color_red_sting: str = color_string_components[0]  # Строка с красной компонентой цвета
+            color_green_sting: str = color_string_components[1]  # Строка с зелёной компонентой цвета
+            color_blue_sting: str = color_string_components[2]  # Строка с синей компонентой цвета
+            color_red: int = int(color_red_sting)  # Красная компонента цвета
+            color_green: int = int(color_green_sting)  # Зелёная компонента цвета
+            color_blue: int = int(color_blue_sting)  # Синяя компонента цвета
+            color: tuple = (color_red, color_green, color_blue)  # Цвет тела в формате RGB
             mass_string: str = new_space_body_params_separated[1]  # Строка с массой тела в [кг]
             mass: float = float(mass_string)  # Масса тела в [кг]
             name_string: str = new_space_body_params_separated[2]  # Строка с названием тела
@@ -212,16 +233,16 @@ class Simulation:
         Обрабатывает графические события в симуляции
         """
 
+        pygame.display.update()
+        self.screen.fill(self.colors['black'])
         for space_body in self.space_bodies_list:
 
-            # Словарь экранных координат в [px/с] и [px]
+            # Словарь экранных координат в [px]
             screen_coordinates: dict = self.convert_coordinates(space_body)
 
-            name: str = space_body.name  # Название тела
-            x: int = screen_coordinates['x']  # Экранная координата тела по оси x в [px]
-            print('Name ->', name, 'x ->', x)
-        print('--- Simulation cycle ---')
-        # FIXME Надо доелать egorkaGubarev
+            screen_x: int = screen_coordinates['x']  # Экранная координата вдоль оси x в [px]
+            screen_y: int = screen_coordinates['y']  # Экранная координата вдоль оси y в [px]
+            circle(self.screen, space_body.color, (screen_x, screen_y), space_body.radius)
 
     def update_physics(self):
         """
