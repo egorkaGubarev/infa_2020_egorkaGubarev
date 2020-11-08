@@ -25,8 +25,8 @@ class Simulation:
         self.log_file_name: str = 'log.txt'  # Файл для записи информации
         self.scale: float = 0  # Определяется в методе self.count_scale
         self.screen = None  # Определяется в self.create_screen()
-        self.screen_height: int = 800  # Высота экрана 800 [px]
-        self.screen_width: int = 1500  # Ширина экрана 1500 [px]
+        self.screen_height: int = 700  # Высота экрана 700 [px]
+        self.screen_width: int = 1200  # Ширина экрана 1200 [px]
         self.space_bodies_list: list = []  # Список космических тел
         self.status: str = 'Created'  # Симуляция создана
 
@@ -248,10 +248,32 @@ class Simulation:
         """
         Обрабатывает физические события в симуляции
         """
+        G = 6.6743015 * 10 ** (-11) # Гравитационная постоянная
+        dt = 10
+
+        for space_body_1 in self.space_bodies_list:
+            for space_body_2 in self.space_bodies_list:
+                if space_body_1 != space_body_2:
+                    x_1 = space_body_1.x
+                    x_2 = space_body_2.x
+                    y_1 = space_body_1.y
+                    y_2 = space_body_2.y
+                    force = G * space_body_1.mass * space_body_2.mass / self.count_distance(x_1, x_2, y_1, y_2) ** 2
+                    acceleration = force / space_body_1.mass
+                    if x_2 > x_1:
+                        angle = math.atan((y_2 - y_1) / (x_2 - x_1))
+                    elif x_2 < x_1:
+                        angle = math.atan((y_2 - y_1) / (x_2 - x_1)) + math.pi
+                    acceleration_x = acceleration * math.cos(angle)
+                    acceleration_y = acceleration * math.sin(angle)
+                    space_body_1.speed_x += acceleration_x * dt
+                    space_body_1.speed_y += acceleration_y * dt
+                    space_body_1.x += space_body_1.speed_x * dt
+                    space_body_1.y += space_body_1.speed_y * dt
+            print('Name:', space_body_1.name, '; speed:', math.sqrt(space_body_1.speed_x ** 2 + space_body_1.speed_y ** 2))
+        print("-----")
 
         # FIXME Надо сделать PolinaKP
-
-        pass
 
 
 class SpaceBody:
