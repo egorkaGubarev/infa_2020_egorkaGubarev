@@ -248,32 +248,43 @@ class Simulation:
         """
         Обрабатывает физические события в симуляции
         """
-        G = 6.6743015 * 10 ** (-11) # Гравитационная постоянная
-        dt = 10
+
+        grav_const = 6.6743015 * 10 ** (-11)  # Гравитационная постоянная
+
+        dt = 1 / self.fps * 1000000000
 
         for space_body_1 in self.space_bodies_list:
+            acceleration_x = space_body_1.acceleration_x
+            acceleration_y = space_body_1.acceleration_y
             for space_body_2 in self.space_bodies_list:
                 if space_body_1 != space_body_2:
                     x_1 = space_body_1.x
                     x_2 = space_body_2.x
                     y_1 = space_body_1.y
                     y_2 = space_body_2.y
-                    force = G * space_body_1.mass * space_body_2.mass / self.count_distance(x_1, x_2, y_1, y_2) ** 2
+                    distance = self.count_distance(x_1, x_2, y_1, y_2)
+                    force = grav_const * space_body_1.mass * space_body_2.mass / distance ** 2
                     acceleration = force / space_body_1.mass
+
                     if x_2 > x_1:
                         angle = math.atan((y_2 - y_1) / (x_2 - x_1))
                     elif x_2 < x_1:
                         angle = math.atan((y_2 - y_1) / (x_2 - x_1)) + math.pi
-                    acceleration_x = acceleration * math.cos(angle)
-                    acceleration_y = acceleration * math.sin(angle)
-                    space_body_1.speed_x += acceleration_x * dt
-                    space_body_1.speed_y += acceleration_y * dt
-                    space_body_1.x += space_body_1.speed_x * dt
-                    space_body_1.y += space_body_1.speed_y * dt
-            print('Name:', space_body_1.name, '; speed:', math.sqrt(space_body_1.speed_x ** 2 + space_body_1.speed_y ** 2))
-        print("-----")
+                    else:
+                        if y_1 > y_2:
+                            angle = math.pi * 3 / 2
+                        elif y_1 < y_2:
+                            angle = math.pi / 2
+                        else:
+                            angle = None
 
-        # FIXME Надо сделать PolinaKP
+                    if type(angle) == float:
+                        acceleration_x += acceleration * math.cos(angle)
+                        acceleration_y += acceleration * math.sin(angle)
+            space_body_1.speed_x += acceleration_x * dt
+            space_body_1.speed_y += acceleration_y * dt
+            space_body_1.x += space_body_1.speed_x * dt
+            space_body_1.y += space_body_1.speed_y * dt
 
 
 class SpaceBody:
@@ -298,6 +309,10 @@ class SpaceBody:
         x - физическая координата центра по оси x в [м]
         y - физическая координата центра по оси y в [м]
         """
+
+        # При создании объекта его ускорение обнуляется
+        self.acceleration_x: float = 0  # Ускорение вдоль оси x в [м/с^2]
+        self.acceleration_y: float = 0  # Ускорение вдоль оси y в [м/с^2]
 
         self.color: tuple = color
         self.mass: float = mass
