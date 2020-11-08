@@ -142,8 +142,8 @@ class Simulation:
 
         log = open(self.log_file_name, 'a')
         for space_body in self.space_bodies_list:
-            print('Name -> ' + str(space_body.name)+'; X -> ' + str(space_body.x) + '; Y -> ' + str(space_body.y) + ';',
-                  file=log)
+            print('Name -> ' + str(space_body.name)+'; X -> ' + str(space_body.x) + '; Y -> ' + str(space_body.y) +
+                  '; Speed_x -> ' + str(space_body.speed_x) + '; Speed_y -> ' + str(space_body.speed_y), file=log)
         print('--- Simulation cycle ---', file=log)
         log.close()
 
@@ -251,7 +251,7 @@ class Simulation:
 
         grav_const = 6.6743015 * 10 ** (-11)  # Гравитационная постоянная
 
-        dt = 1 / self.fps * 1000000000
+        dt = 1 / self.fps * 500000
 
         for space_body_1 in self.space_bodies_list:
             acceleration_x = space_body_1.acceleration_x
