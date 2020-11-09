@@ -8,6 +8,64 @@ import pygame
 from pygame.draw import *
 
 
+class Button:
+    """
+    Описывает кнопку
+    """
+
+    def __init__(self, height: int, screen, width: int, x: int, y: int):
+        """
+        Параметры кнопки
+
+        height - высота в [px]
+        screen - экран
+        width - ширина в [px]
+        x - экранная координата x верхнего левого края кнопки в [px]
+        y - экранная координата y верхнего левого края кнопки в [px]
+        """
+
+        self.color = (128, 128, 128)  # Серый
+        self.height = height
+        self.width = width
+        self.screen = screen
+        self.x: int = x
+        self.y: int = y
+
+    def check_click(self, click_pos: list):
+        """
+        Проверяет, нажата ли кнопка
+
+        click_pos - позиция нажатия мыши
+        """
+
+        x = click_pos[0]  # Экранная координата x нажатия в [px]
+        y = click_pos[1]  # Экранная координата y нажатия в [px]
+        if self.x <= x <= self.x + self.width and self.y <= y <= self.y + self.height:
+            return True
+        else:
+            return False
+
+    def draw(self):
+        """
+        Рисует кнопку на экране
+        """
+
+        rect(self.screen, self.color, (self.x, self.y, self.width, self.height))
+
+    @staticmethod
+    def process_click(simulation):
+        """
+        Обрабатывает нажатие на кнопку
+
+        simulation - статус симуляции
+        """
+
+        if simulation.dt > 0:
+            simulation.dt = 0  # Пауза
+        else:
+            simulation.dt = 1 / simulation.fps * 500000  # Возобновление симуляции
+
+
 class Simulation:
     """
     Описывает симуляцию
@@ -18,9 +76,11 @@ class Simulation:
         Параметры симуляции
         """
 
+        self.button_dict: dict = {}  # Словарь кнопок
         self.clock = pygame.time.Clock()  # Часы
         self.colors: dict = {'black': (0, 0, 0)}  # Словарь цветов
         self.fps: int = 24  # 24 кадра в секунду
+        self.dt: float = 1 / self.fps * 500000  # Шаг времени в симуляции в [с]
         self.init_file_name: str = 'init.txt'  # Файл для чтения информации
         self.log_file_name: str = 'log.txt'  # Файл для записи информации
         self.scale: float = 0  # Определяется в методе self.count_scale
@@ -95,6 +155,14 @@ class Simulation:
                 max_sun_distance: float = sun_distance  # Поиск максимального физического расстояния до Солнца в [м]
         scale: float = max_sun_distance / sun_available_distance  # Масштаб в [м/px]
         return scale
+
+    def create_buttons(self):
+        """
+        Создаёт кнопку
+        """
+
+        pause_button = Button(30, self.screen, 30, 0, 0)  # Кнопка паузы
+        self.button_dict['pause'] = pause_button
 
     def create_log_file(self):
         """
@@ -215,6 +283,7 @@ class Simulation:
         self.status: str = 'run'  # Симуляция запущена
         self.read_information()
         self.scale = self.count_scale()  # Масштаб в [м/px]
+        self.create_buttons()
         self.create_log_file()
 
     def update_logic(self):
@@ -227,6 +296,11 @@ class Simulation:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.status: str = 'finish'  # Симуляция завершена
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                for button_name in self.button_dict:
+                    button = self.button_dict[button_name]  # Кнопка из словаря
+                    if button.check_click(event.pos):
+                        button.process_click(self)
 
     def update_graphics(self):
         """
@@ -244,14 +318,21 @@ class Simulation:
             screen_y: int = screen_coordinates['y']  # Экранная координата вдоль оси y в [px]
             circle(self.screen, space_body.color, (screen_x, screen_y), space_body.radius)
 
+    def update_interface(self):
+        """
+        Обрабатывает события пользовательского интерфейса
+        """
+
+        for button_name in self.button_dict:
+            button = self.button_dict[button_name]  # Кнопка из словаря
+            button.draw()
+
     def update_physics(self):
         """
         Обрабатывает физические события в симуляции
         """
 
         grav_const = 6.6743015 * 10 ** (-11)  # Гравитационная постоянная
-
-        dt = 1 / self.fps * 500000
 
         for space_body_1 in self.space_bodies_list:
             acceleration_x = space_body_1.acceleration_x
@@ -281,10 +362,10 @@ class Simulation:
                     if type(angle) == float:
                         acceleration_x += acceleration * math.cos(angle)
                         acceleration_y += acceleration * math.sin(angle)
-            space_body_1.speed_x += acceleration_x * dt
-            space_body_1.speed_y += acceleration_y * dt
-            space_body_1.x += space_body_1.speed_x * dt
-            space_body_1.y += space_body_1.speed_y * dt
+            space_body_1.speed_x += acceleration_x * self.dt
+            space_body_1.speed_y += acceleration_y * self.dt
+            space_body_1.x += space_body_1.speed_x * self.dt
+            space_body_1.y += space_body_1.speed_y * self.dt
 
 
 class SpaceBody:
