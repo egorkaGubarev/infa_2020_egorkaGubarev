@@ -3,9 +3,9 @@
 """
 
 import math
-import pygame
 
 from pygame.draw import *
+
 
 class SpaceBody:
     """

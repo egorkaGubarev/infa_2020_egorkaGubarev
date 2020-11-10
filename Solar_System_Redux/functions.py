@@ -18,7 +18,7 @@ def create_screen(full_screen_needed: bool, height: int, width: int):
     if full_screen_needed:
         screen = pygame.display.set_mode((width, height), pygame.FULLSCREEN)  # Создание полного экрана
     else:
-        screen = pygame.display.set_mode(width, height)  # Создание полного экрана в окне
+        screen = pygame.display.set_mode((width, height))  # Создание полного экрана в окне
     return screen
 
 

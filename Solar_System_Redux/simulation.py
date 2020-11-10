@@ -113,17 +113,6 @@ class Simulation:
         scale: float = max_sun_distance / sun_available_distance  # Масштаб в [м/px]
         return scale
 
-    def create_buttons(self):  # FIXME это метод класса UserInterface
-        """
-        Создаёт кнопки
-        """
-
-        colors_dict: dict = self.colors_dict  # Словарь цветов FIXME конопка должна принимать конкретный цвет
-        screen = self.screen  # Экран для рисования
-
-        pause_button = Button(colors_dict, 30, screen, 30, 0, 0)  # Кнопка паузы FIXME необходим общий случай
-        self.button_dict['pause'] = pause_button
-
     def create_log_file(self):
         """
         Создаёт файл для записи информации
@@ -283,20 +272,8 @@ class Simulation:
             screen_y: int = screen_coordinates['y']  # Экранная координата вдоль оси y в [px]
             circle(screen, space_body.color, (screen_x, screen_y), space_body.radius)
 
-
             if space_body.name != 'Sun':
                 space_body.draw(screen_x, screen_y, screen, colors_dict['black'])
-
-    def update_interface(self):  # FIXME это метод класса UserInterface
-        """
-        Обрабатывает события пользовательского интерфейса
-        """
-
-        button_dict: dict = self.button_dict
-
-        for button_name in button_dict:
-            button = button_dict[button_name]  # Кнопка из словаря
-            button.draw()
 
     def update_physics(self):
         """
@@ -308,38 +285,38 @@ class Simulation:
 
         if status == 'run':  # Если симуляция запущена
             for space_body_1 in self.space_bodies_list:
-            acceleration_x = space_body_1.acceleration_x
-            acceleration_y = space_body_1.acceleration_y
-            for space_body_2 in self.space_bodies_list:
-                if space_body_1 != space_body_2:
-                    x_1 = space_body_1.x
-                    x_2 = space_body_2.x
-                    y_1 = space_body_1.y
-                    y_2 = space_body_2.y
-                    distance = self.count_distance(x_1, x_2, y_1, y_2)
-                    force = grav_const * space_body_1.mass * space_body_2.mass / distance ** 2
-                    acceleration = force / space_body_1.mass
+                acceleration_x = space_body_1.acceleration_x
+                acceleration_y = space_body_1.acceleration_y
+                for space_body_2 in self.space_bodies_list:
+                    if space_body_1 != space_body_2:
+                        x_1 = space_body_1.x
+                        x_2 = space_body_2.x
+                        y_1 = space_body_1.y
+                        y_2 = space_body_2.y
+                        distance = self.count_distance(x_1, x_2, y_1, y_2)
+                        force = grav_const * space_body_1.mass * space_body_2.mass / distance ** 2
+                        acceleration = force / space_body_1.mass
 
-                    if x_2 > x_1:
-                        angle = math.atan((y_2 - y_1) / (x_2 - x_1))
-                    elif x_2 < x_1:
-                        angle = math.atan((y_2 - y_1) / (x_2 - x_1)) - math.pi
-                    else:
-                        if y_1 > y_2:
-                            angle = math.pi * 3 / 2
-                        elif y_1 < y_2:
-                            angle = math.pi / 2
+                        if x_2 > x_1:
+                            angle = math.atan((y_2 - y_1) / (x_2 - x_1))
+                        elif x_2 < x_1:
+                            angle = math.atan((y_2 - y_1) / (x_2 - x_1)) - math.pi
                         else:
-                            angle = None
+                            if y_1 > y_2:
+                                angle = math.pi * 3 / 2
+                            elif y_1 < y_2:
+                                angle = math.pi / 2
+                            else:
+                                angle = None
 
-                    if space_body_2.name != "Sun" and space_body_1.name == "Sun":
-                        space_body_2.angle = angle
-                        space_body_2.distance = distance
+                        if space_body_2.name != "Sun" and space_body_1.name == "Sun":
+                            space_body_2.angle = angle
+                            space_body_2.distance = distance
 
-                    if type(angle) == float:
-                        acceleration_x += acceleration * math.cos(angle)
-                        acceleration_y += acceleration * math.sin(angle)
-            space_body_1.speed_x += acceleration_x * self.dt
-            space_body_1.speed_y += acceleration_y * self.dt
-            space_body_1.x += space_body_1.speed_x * self.dt
-            space_body_1.y += space_body_1.speed_y * self.dt
+                        if type(angle) == float:
+                            acceleration_x += acceleration * math.cos(angle)
+                            acceleration_y += acceleration * math.sin(angle)
+                space_body_1.speed_x += acceleration_x * self.dt
+                space_body_1.speed_y += acceleration_y * self.dt
+                space_body_1.x += space_body_1.speed_x * self.dt
+                space_body_1.y += space_body_1.speed_y * self.dt

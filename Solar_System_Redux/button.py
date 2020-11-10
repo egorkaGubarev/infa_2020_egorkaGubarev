@@ -68,16 +68,3 @@ class Button:
         y: int = self.y  # Экранная координата y верхнего левого угла кнопки в [px]
 
         rect(screen, color, (x, y, width, height))
-
-    @staticmethod
-    def process_click(simulation):  # FIXME необходим общий случай
-        """
-        Обрабатывает нажатие на кнопку
-
-        simulation - объект Симуляция
-        """
-
-        if simulation.dt > 0:
-            simulation.dt = 0  # Пауза
-        else:
-            simulation.dt = 1 / simulation.fps * 5000000  # Возобновление симуляции
