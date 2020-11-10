@@ -7,7 +7,7 @@ import pygame
 
 from pygame.draw import *
 
-from button import Button
+from button import Button  # FIXME кнопки должны принадлежать классу UserInterface
 from space_body import SpaceBody
 
 
@@ -16,22 +16,26 @@ class Simulation:
     Описывает симуляцию
     """
 
-    def __init__(self, screen):
+    def __init__(self, clock, colors_dict: dict, fps: int, screen):
         """
         Параметры симуляции
 
+        clock - часы
+        colors_dict - словарь цветов
+        fps - частота обновления экрана в [Гц]
         screen - экран для рисования
         """
 
-        self.button_dict: dict = {}  # Словарь кнопок
-        self.clock = pygame.time.Clock()  # Часы
-        self.colors: dict = {'black': (0, 0, 0)}  # Словарь цветов
-        self.fps: int = 24  # 24 кадра в секунду
-        self.dt: float = 1 / self.fps * 500000  # Шаг времени в симуляции в [с]
+        self.button_dict: dict = {}  # Словарь кнопок FIXME словарь кнопок должен принадлежать классу UserInterface
+        self.clock = clock
+        self.colors_dict: dict = colors_dict
+        self.fps: int = fps
+        self.time_scale = 500000  # Отношение скорости течения времени в симуляции к физической
+        self.dt: float = 1 / fps * self.time_scale  # Шаг времени в симуляции в [с]
         self.init_file_name: str = 'init.txt'  # Файл для чтения информации
         self.log_file_name: str = 'log.txt'  # Файл для записи информации
-        self.scale: float = 0  # Определяется в методе self.count_scale
-        self.screen = screen  # Экран для рисования
+        self.scale = None  # Определяется в методе self.count_scale
+        self.screen = screen
         self.space_bodies_list: list = []  # Список космических тел
         self.status: str = 'Created'  # Симуляция создана
 
@@ -109,12 +113,15 @@ class Simulation:
         scale: float = max_sun_distance / sun_available_distance  # Масштаб в [м/px]
         return scale
 
-    def create_buttons(self):
+    def create_buttons(self):  # FIXME это метод класса UserInterface
         """
         Создаёт кнопкки
         """
 
-        pause_button = Button(30, self.screen, 30, 0, 0)  # Кнопка паузы
+        colors_dict: dict = self.colors_dict  # Словарь цветов FIXME конопка должна принимать конкретный цвет
+        screen = self.screen  # Экран для рисования
+
+        pause_button = Button(colors_dict, 30, screen, 30, 0, 0)  # Кнопка паузы FIXME необходим общий случай
         self.button_dict['pause'] = pause_button
 
     def create_log_file(self):
@@ -122,7 +129,9 @@ class Simulation:
         Создаёт файл для записи информации
         """
 
-        log = open(self.log_file_name, 'w')  # Файл для записи информации
+        log_file_name: str = self.log_file_name  # Имя файла для записи информации
+
+        log = open(log_file_name, 'w')  # Файл для записи информации
         log.close()
 
     def create_space_body(self, color: tuple, mass: float, name: str, radius: int, speed_x: float, speed_y: float,
@@ -153,8 +162,11 @@ class Simulation:
         Записывает информацию о симуляции в файл
         """
 
-        log = open(self.log_file_name, 'a')
-        for space_body in self.space_bodies_list:
+        log_file_name: str = self.log_file_name  # Имя файла для записи информации
+        space_bodies_list: list = self.space_bodies_list  # Список космических тел
+
+        log = open(log_file_name, 'a')  # Файл для записи информации
+        for space_body in space_bodies_list:
             print('Name -> ' + str(space_body.name)+'; X -> ' + str(space_body.x) + '; Y -> ' + str(space_body.y) +
                   '; Speed_x -> ' + str(space_body.speed_x) + '; Speed_y -> ' + str(space_body.speed_y), file=log)
         print('--- Simulation cycle ---', file=log)
@@ -165,7 +177,9 @@ class Simulation:
         Читает информацию о симуляции из файла и преобразует её в подхлдящий формат
         """
 
-        init = open(self.init_file_name, 'r')  # Файл для чтения информации
+        init_file_name: str = self.init_file_name  # Имя файла для чтения информации
+
+        init = open(init_file_name, 'r')  # Файл для чтения информации
         for new_space_body in init:
             new_space_body_params: str = new_space_body  # Строка с параметрами нового космического тела
             new_space_body_params_stripped = new_space_body_params.strip()  # Строка без символа конца строки
@@ -236,12 +250,17 @@ class Simulation:
         Обрабатывает логические события в симуляции
         """
 
-        self.clock.tick(self.fps)
+        clock = self.clock  # Часы
+        fps: int = self.fps  # Частота обновления экрана в [Гц]
+
+        clock.tick(fps)
         for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
+            if event.type == pygame.KEYDOWN:  # Если нажата кнопка
+                if event.key == pygame.K_ESCAPE:  # Если нажат Esc
                     self.status: str = 'finish'  # Симуляция завершена
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+
+            # FIXME это должен делать класс UserInterface
+            elif event.type == pygame.MOUSEBUTTONDOWN:  # Если нажата кнопка мыши
                 for button_name in self.button_dict:
                     button = self.button_dict[button_name]  # Кнопка из словаря
                     if button.check_click(event.pos):
@@ -252,24 +271,30 @@ class Simulation:
         Обрабатывает графические события в симуляции
         """
 
+        colors_dict: dict = self.colors_dict  # Словарь цветов
+        screen = self.screen  # Экран для рисования
+        space_bodies_list: list = self.space_bodies_list  # Список космических тел
+
         pygame.display.update()
-        self.screen.fill(self.colors['black'])
-        for space_body in self.space_bodies_list:
+        screen.fill(colors_dict['black'])
+        for space_body in space_bodies_list:
 
             # Словарь экранных координат в [px]
             screen_coordinates: dict = self.convert_coordinates(space_body)
 
             screen_x: int = screen_coordinates['x']  # Экранная координата вдоль оси x в [px]
             screen_y: int = screen_coordinates['y']  # Экранная координата вдоль оси y в [px]
-            circle(self.screen, space_body.color, (screen_x, screen_y), space_body.radius)
+            circle(screen, space_body.color, (screen_x, screen_y), space_body.radius)
 
-    def update_interface(self):
+    def update_interface(self):  # FIXME это метод класса UserInterface
         """
         Обрабатывает события пользовательского интерфейса
         """
 
-        for button_name in self.button_dict:
-            button = self.button_dict[button_name]  # Кнопка из словаря
+        button_dict: dict = self.button_dict
+
+        for button_name in button_dict:
+            button = button_dict[button_name]  # Кнопка из словаря
             button.draw()
 
     def update_physics(self):

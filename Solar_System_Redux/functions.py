@@ -21,12 +21,15 @@ def create_screen(full_screen_needed: bool, height: int, width: int):
     return screen
 
 
-def create_simulation(screen):
+def create_simulation(clock, colors_dict: dict, fps: int, screen):
     """
     Создаёт симуляцию
 
+    clock - часы
+    colors_dict - словарь цветов
+    fps - частота обновления экрана в [Гц]
     screen - экран для рисования
     """
 
-    simulation = Simulation(screen)  # Создание симуляции
+    simulation = Simulation(clock, colors_dict, fps, screen)  # Создание симуляции
     return simulation

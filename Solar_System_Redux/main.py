@@ -5,8 +5,9 @@
 from functions import *
 from settings import *
 
+clock = pygame.time.Clock()  # Часы
 screen = create_screen(full_screen_mode_status, screen_height, screen_width)  # Создание экрана
-simulation = create_simulation(screen)  # Создание симуляции
+simulation = create_simulation(clock, colors_dict, fps, screen)  # Создание симуляции
 simulation.setup()
 
 # Пока симуляция не завершена
