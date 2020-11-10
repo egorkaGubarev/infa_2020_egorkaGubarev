@@ -3,6 +3,7 @@
 """
 
 from simulation import *
+from user_interface import *
 
 
 def create_screen(full_screen_needed: bool, height: int, width: int):
@@ -21,7 +22,7 @@ def create_screen(full_screen_needed: bool, height: int, width: int):
     return screen
 
 
-def create_simulation(clock, colors_dict: dict, fps: int, screen):
+def create_simulation(clock, colors_dict: dict, fps: int, screen, user_interface):
     """
     Создаёт симуляцию
 
@@ -29,7 +30,22 @@ def create_simulation(clock, colors_dict: dict, fps: int, screen):
     colors_dict - словарь цветов
     fps - частота обновления экрана в [Гц]
     screen - экран для рисования
+    user_interface - объект пользовательского интерфейса
     """
 
-    simulation = Simulation(clock, colors_dict, fps, screen)  # Создание симуляции
+    simulation = Simulation(clock, colors_dict, fps, screen, user_interface)  # Создание симуляции
     return simulation
+
+
+def create_user_interface(clock, colors_dict: dict, fps: int, screen):
+    """
+    Создаёт пользовательский интерфейс
+
+    clock - часы
+    colors_dict - словарь цветов
+    fps - частота обновления экрана в [Гц]
+    screen - экран для рисования
+    """
+
+    user_interface = UserInterface(clock, colors_dict, fps, screen)
+    return user_interface

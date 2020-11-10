@@ -7,7 +7,6 @@ import math
 
 from pygame.draw import *
 
-from button import Button  # FIXME кнопки должны принадлежать классу UserInterface
 from space_body import SpaceBody
 
 
@@ -16,7 +15,7 @@ class Simulation:
     Описывает симуляцию
     """
 
-    def __init__(self, clock, colors_dict: dict, fps: int, screen):
+    def __init__(self, clock, colors_dict: dict, fps: int, screen, user_interface):
         """
         Параметры симуляции
 
@@ -24,9 +23,9 @@ class Simulation:
         colors_dict - словарь цветов
         fps - частота обновления экрана в [Гц]
         screen - экран для рисования
+        user_interface - объект пользовательского интерфейса
         """
 
-        self.button_dict: dict = {}  # Словарь кнопок FIXME словарь кнопок должен принадлежать классу UserInterface
         self.clock = clock
         self.colors_dict: dict = colors_dict
         self.fps: int = fps
@@ -38,6 +37,7 @@ class Simulation:
         self.screen = screen
         self.space_bodies_list: list = []  # Список космических тел
         self.status: str = 'Created'  # Симуляция создана
+        self.user_interface = user_interface
 
     def convert_coordinates(self, space_body):
         """
@@ -162,15 +162,17 @@ class Simulation:
         Записывает информацию о симуляции в файл
         """
 
-        log_file_name: str = self.log_file_name  # Имя файла для записи информации
-        space_bodies_list: list = self.space_bodies_list  # Список космических тел
+        status: str = self.status  # Статус
+        if status == 'run':  # Если симуляция запущена
+            log_file_name: str = self.log_file_name  # Имя файла для записи информации
+            space_bodies_list: list = self.space_bodies_list  # Список космических тел
 
-        log = open(log_file_name, 'a')  # Файл для записи информации
-        for space_body in space_bodies_list:
-            print('Name -> ' + str(space_body.name)+'; X -> ' + str(space_body.x) + '; Y -> ' + str(space_body.y) +
-                  '; Speed_x -> ' + str(space_body.speed_x) + '; Speed_y -> ' + str(space_body.speed_y), file=log)
-        print('--- Simulation cycle ---', file=log)
-        log.close()
+            log = open(log_file_name, 'a')  # Файл для записи информации
+            for space_body in space_bodies_list:
+                print('Name -> ' + str(space_body.name)+'; X -> ' + str(space_body.x) + '; Y -> ' + str(space_body.y) +
+                      '; Speed_x -> ' + str(space_body.speed_x) + '; Speed_y -> ' + str(space_body.speed_y), file=log)
+            print('--- Simulation cycle ---', file=log)
+            log.close()
 
     def read_information(self):
         """
@@ -242,7 +244,6 @@ class Simulation:
         self.status: str = 'run'  # Симуляция запущена
         self.read_information()
         self.scale = self.count_scale()  # Масштаб в [м/px]
-        self.create_buttons()
         self.create_log_file()
 
     def update_logic(self):
@@ -250,6 +251,7 @@ class Simulation:
         Обрабатывает логические события в симуляции
         """
 
+        user_interface = self.user_interface
         clock = self.clock  # Часы
         fps: int = self.fps  # Частота обновления экрана в [Гц]
 
@@ -258,13 +260,8 @@ class Simulation:
             if event.type == pygame.KEYDOWN:  # Если нажата кнопка
                 if event.key == pygame.K_ESCAPE:  # Если нажат Esc
                     self.status: str = 'finish'  # Симуляция завершена
-
-            # FIXME это должен делать класс UserInterface
             elif event.type == pygame.MOUSEBUTTONDOWN:  # Если нажата кнопка мыши
-                for button_name in self.button_dict:
-                    button = self.button_dict[button_name]  # Кнопка из словаря
-                    if button.check_click(event.pos):
-                        button.process_click(self)
+                user_interface.process_buttons(event, self)
 
     def update_graphics(self):
         """
@@ -286,6 +283,7 @@ class Simulation:
             screen_y: int = screen_coordinates['y']  # Экранная координата вдоль оси y в [px]
             circle(screen, space_body.color, (screen_x, screen_y), space_body.radius)
 
+
             if space_body.name != 'Sun':
                 space_body.draw(screen_x, screen_y, screen, colors_dict['black'])
 
@@ -306,8 +304,10 @@ class Simulation:
         """
 
         grav_const = 6.6743015 * 10 ** (-11)  # Гравитационная постоянная
+        status: str = self.status  # Статус симуляции
 
-        for space_body_1 in self.space_bodies_list:
+        if status == 'run':  # Если симуляция запущена
+            for space_body_1 in self.space_bodies_list:
             acceleration_x = space_body_1.acceleration_x
             acceleration_y = space_body_1.acceleration_y
             for space_body_2 in self.space_bodies_list:
