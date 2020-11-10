@@ -80,4 +80,4 @@ class Button:
         if simulation.dt > 0:
             simulation.dt = 0  # Пауза
         else:
-            simulation.dt = 1 / simulation.fps * 500000  # Возобновление симуляции
+            simulation.dt = 1 / simulation.fps * 5000000  # Возобновление симуляции
