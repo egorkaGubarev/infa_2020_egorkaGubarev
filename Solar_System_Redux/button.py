@@ -10,13 +10,13 @@ class Button:
     Описывает кнопку
     """
 
-    def __init__(self, colors_dict: dict, height: int, screen, width: int, x: int, y: int):
+    def __init__(self, click_handler, color: tuple, height: int, width: int, x: int, y: int):
         """
         Параметры кнопки
 
-        color_dict - словарь цветов
+        click_handler - функция, исполняемая при нажатии кнопки
+        color -  цвет
         height - высота в [px]
-        screen - экран для рисования
         width - ширина в [px]
 
         Экранная система координат:
@@ -28,9 +28,9 @@ class Button:
         y - экранная координата y верхнего левого края кнопки в [px]
         """
 
-        self.colors_dict: dict = colors_dict  # FIXME кнопка должна принимать конкретный цвет
+        self.click_handler = click_handler
+        self.color: tuple = color
         self.height: int = height
-        self.screen = screen
         self.width: int = width
         self.x: int = x
         self.y: int = y
@@ -54,15 +54,15 @@ class Button:
         else:
             return False
 
-    def draw(self):
+    def draw(self, screen):
         """
         Рисует кнопку на экране
+
+        screen - экран для рисования
         """
 
-        colors_dict = self.colors_dict  # Словарь цветов
-        color: tuple = colors_dict['dark_blue']  # Тёмно-синий цвет
+        color: tuple = self.color  # Цвет
         height: int = self.height  # Высота кнопки в [px]
-        screen = self.screen  # Экран для рисования
         width: int = self.width  # Ширина кнопки в [px]
         x: int = self.x  # Экранная координата x верхнего левого угла кнопки в [px]
         y: int = self.y  # Экранная координата y верхнего левого угла кнопки в [px]

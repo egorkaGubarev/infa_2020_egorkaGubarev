@@ -7,7 +7,6 @@ import pygame
 
 from pygame.draw import *
 
-from button import Button  # FIXME кнопки должны принадлежать классу UserInterface
 from space_body import SpaceBody
 
 
@@ -16,7 +15,7 @@ class Simulation:
     Описывает симуляцию
     """
 
-    def __init__(self, clock, colors_dict: dict, fps: int, screen):
+    def __init__(self, clock, colors_dict: dict, fps: int, screen, user_interface):
         """
         Параметры симуляции
 
@@ -24,9 +23,9 @@ class Simulation:
         colors_dict - словарь цветов
         fps - частота обновления экрана в [Гц]
         screen - экран для рисования
+        user_interface - объект пользовательского интерфейса
         """
 
-        self.button_dict: dict = {}  # Словарь кнопок FIXME словарь кнопок должен принадлежать классу UserInterface
         self.clock = clock
         self.colors_dict: dict = colors_dict
         self.fps: int = fps
@@ -38,6 +37,7 @@ class Simulation:
         self.screen = screen
         self.space_bodies_list: list = []  # Список космических тел
         self.status: str = 'Created'  # Симуляция создана
+        self.user_interface = user_interface
 
     def convert_coordinates(self, space_body):
         """
@@ -113,17 +113,6 @@ class Simulation:
         scale: float = max_sun_distance / sun_available_distance  # Масштаб в [м/px]
         return scale
 
-    def create_buttons(self):  # FIXME это метод класса UserInterface
-        """
-        Создаёт кнопкки
-        """
-
-        colors_dict: dict = self.colors_dict  # Словарь цветов FIXME конопка должна принимать конкретный цвет
-        screen = self.screen  # Экран для рисования
-
-        pause_button = Button(colors_dict, 30, screen, 30, 0, 0)  # Кнопка паузы FIXME необходим общий случай
-        self.button_dict['pause'] = pause_button
-
     def create_log_file(self):
         """
         Создаёт файл для записи информации
@@ -162,15 +151,17 @@ class Simulation:
         Записывает информацию о симуляции в файл
         """
 
-        log_file_name: str = self.log_file_name  # Имя файла для записи информации
-        space_bodies_list: list = self.space_bodies_list  # Список космических тел
+        status: str = self.status  # Статус
+        if status == 'run':  # Если симуляция запущена
+            log_file_name: str = self.log_file_name  # Имя файла для записи информации
+            space_bodies_list: list = self.space_bodies_list  # Список космических тел
 
-        log = open(log_file_name, 'a')  # Файл для записи информации
-        for space_body in space_bodies_list:
-            print('Name -> ' + str(space_body.name)+'; X -> ' + str(space_body.x) + '; Y -> ' + str(space_body.y) +
-                  '; Speed_x -> ' + str(space_body.speed_x) + '; Speed_y -> ' + str(space_body.speed_y), file=log)
-        print('--- Simulation cycle ---', file=log)
-        log.close()
+            log = open(log_file_name, 'a')  # Файл для записи информации
+            for space_body in space_bodies_list:
+                print('Name -> ' + str(space_body.name)+'; X -> ' + str(space_body.x) + '; Y -> ' + str(space_body.y) +
+                      '; Speed_x -> ' + str(space_body.speed_x) + '; Speed_y -> ' + str(space_body.speed_y), file=log)
+            print('--- Simulation cycle ---', file=log)
+            log.close()
 
     def read_information(self):
         """
@@ -242,7 +233,6 @@ class Simulation:
         self.status: str = 'run'  # Симуляция запущена
         self.read_information()
         self.scale = self.count_scale()  # Масштаб в [м/px]
-        self.create_buttons()
         self.create_log_file()
 
     def update_logic(self):
@@ -250,6 +240,7 @@ class Simulation:
         Обрабатывает логические события в симуляции
         """
 
+        user_interface = self.user_interface
         clock = self.clock  # Часы
         fps: int = self.fps  # Частота обновления экрана в [Гц]
 
@@ -258,13 +249,8 @@ class Simulation:
             if event.type == pygame.KEYDOWN:  # Если нажата кнопка
                 if event.key == pygame.K_ESCAPE:  # Если нажат Esc
                     self.status: str = 'finish'  # Симуляция завершена
-
-            # FIXME это должен делать класс UserInterface
             elif event.type == pygame.MOUSEBUTTONDOWN:  # Если нажата кнопка мыши
-                for button_name in self.button_dict:
-                    button = self.button_dict[button_name]  # Кнопка из словаря
-                    if button.check_click(event.pos):
-                        button.process_click(self)
+                user_interface.process_buttons(event, self)
 
     def update_graphics(self):
         """
@@ -286,53 +272,44 @@ class Simulation:
             screen_y: int = screen_coordinates['y']  # Экранная координата вдоль оси y в [px]
             circle(screen, space_body.color, (screen_x, screen_y), space_body.radius)
 
-    def update_interface(self):  # FIXME это метод класса UserInterface
-        """
-        Обрабатывает события пользовательского интерфейса
-        """
-
-        button_dict: dict = self.button_dict
-
-        for button_name in button_dict:
-            button = button_dict[button_name]  # Кнопка из словаря
-            button.draw()
-
     def update_physics(self):
         """
         Обрабатывает физические события в симуляции
         """
 
         grav_const = 6.6743015 * 10 ** (-11)  # Гравитационная постоянная
+        status: str = self.status  # Статус симуляции
 
-        for space_body_1 in self.space_bodies_list:
-            acceleration_x = space_body_1.acceleration_x
-            acceleration_y = space_body_1.acceleration_y
-            for space_body_2 in self.space_bodies_list:
-                if space_body_1 != space_body_2:
-                    x_1 = space_body_1.x
-                    x_2 = space_body_2.x
-                    y_1 = space_body_1.y
-                    y_2 = space_body_2.y
-                    distance = self.count_distance(x_1, x_2, y_1, y_2)
-                    force = grav_const * space_body_1.mass * space_body_2.mass / distance ** 2
-                    acceleration = force / space_body_1.mass
+        if status == 'run':  # Если симуляция запущена
+            for space_body_1 in self.space_bodies_list:
+                acceleration_x = space_body_1.acceleration_x
+                acceleration_y = space_body_1.acceleration_y
+                for space_body_2 in self.space_bodies_list:
+                    if space_body_1 != space_body_2:
+                        x_1 = space_body_1.x
+                        x_2 = space_body_2.x
+                        y_1 = space_body_1.y
+                        y_2 = space_body_2.y
+                        distance = self.count_distance(x_1, x_2, y_1, y_2)
+                        force = grav_const * space_body_1.mass * space_body_2.mass / distance ** 2
+                        acceleration = force / space_body_1.mass
 
-                    if x_2 > x_1:
-                        angle = math.atan((y_2 - y_1) / (x_2 - x_1))
-                    elif x_2 < x_1:
-                        angle = math.atan((y_2 - y_1) / (x_2 - x_1)) + math.pi
-                    else:
-                        if y_1 > y_2:
-                            angle = math.pi * 3 / 2
-                        elif y_1 < y_2:
-                            angle = math.pi / 2
+                        if x_2 > x_1:
+                            angle = math.atan((y_2 - y_1) / (x_2 - x_1))
+                        elif x_2 < x_1:
+                            angle = math.atan((y_2 - y_1) / (x_2 - x_1)) + math.pi
                         else:
-                            angle = None
+                            if y_1 > y_2:
+                                angle = math.pi * 3 / 2
+                            elif y_1 < y_2:
+                                angle = math.pi / 2
+                            else:
+                                angle = None
 
-                    if type(angle) == float:
-                        acceleration_x += acceleration * math.cos(angle)
-                        acceleration_y += acceleration * math.sin(angle)
-            space_body_1.speed_x += acceleration_x * self.dt
-            space_body_1.speed_y += acceleration_y * self.dt
-            space_body_1.x += space_body_1.speed_x * self.dt
-            space_body_1.y += space_body_1.speed_y * self.dt
+                        if type(angle) == float:
+                            acceleration_x += acceleration * math.cos(angle)
+                            acceleration_y += acceleration * math.sin(angle)
+                space_body_1.speed_x += acceleration_x * self.dt
+                space_body_1.speed_y += acceleration_y * self.dt
+                space_body_1.x += space_body_1.speed_x * self.dt
+                space_body_1.y += space_body_1.speed_y * self.dt
