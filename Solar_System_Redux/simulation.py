@@ -2,8 +2,8 @@
 Модуль симуляции
 """
 
-import math
 import pygame
+import math
 
 from pygame.draw import *
 
@@ -30,7 +30,7 @@ class Simulation:
         self.clock = clock
         self.colors_dict: dict = colors_dict
         self.fps: int = fps
-        self.time_scale = 500000  # Отношение скорости течения времени в симуляции к физической
+        self.time_scale = 5000000  # Отношение скорости течения времени в симуляции к физической
         self.dt: float = 1 / fps * self.time_scale  # Шаг времени в симуляции в [с]
         self.init_file_name: str = 'init.txt'  # Файл для чтения информации
         self.log_file_name: str = 'log.txt'  # Файл для записи информации
@@ -115,7 +115,7 @@ class Simulation:
 
     def create_buttons(self):  # FIXME это метод класса UserInterface
         """
-        Создаёт кнопкки
+        Создаёт кнопки
         """
 
         colors_dict: dict = self.colors_dict  # Словарь цветов FIXME конопка должна принимать конкретный цвет
@@ -286,6 +286,9 @@ class Simulation:
             screen_y: int = screen_coordinates['y']  # Экранная координата вдоль оси y в [px]
             circle(screen, space_body.color, (screen_x, screen_y), space_body.radius)
 
+            if space_body.name != 'Sun':
+                space_body.draw(screen_x, screen_y, screen, colors_dict['black'])
+
     def update_interface(self):  # FIXME это метод класса UserInterface
         """
         Обрабатывает события пользовательского интерфейса
@@ -320,7 +323,7 @@ class Simulation:
                     if x_2 > x_1:
                         angle = math.atan((y_2 - y_1) / (x_2 - x_1))
                     elif x_2 < x_1:
-                        angle = math.atan((y_2 - y_1) / (x_2 - x_1)) + math.pi
+                        angle = math.atan((y_2 - y_1) / (x_2 - x_1)) - math.pi
                     else:
                         if y_1 > y_2:
                             angle = math.pi * 3 / 2
@@ -328,6 +331,10 @@ class Simulation:
                             angle = math.pi / 2
                         else:
                             angle = None
+
+                    if space_body_2.name != "Sun" and space_body_1.name == "Sun":
+                        space_body_2.angle = angle
+                        space_body_2.distance = distance
 
                     if type(angle) == float:
                         acceleration_x += acceleration * math.cos(angle)
