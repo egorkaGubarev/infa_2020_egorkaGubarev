@@ -10,6 +10,11 @@ text_close = Text('Close game?', 0, 0)
 button_cancel = Button('Cancel', 0, 40)
 button_close = Button('Close', 0, 80)
 
+# Credits
+text_credits_egorka = Text('EgorkaGubarev - programmer', 0, 0)
+text_credits_polina = Text('PolinaKP - designer, artist, composer', 0, 40)
+button_credits_close = Button('Close', 0, 80)
+
 # Menu
 text_menu = Text('Space Program', 0, 0)
 button_play = Button('Play', 0, 40)
