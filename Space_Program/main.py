@@ -3,6 +3,6 @@ from game import Game
 game = Game()
 
 game.setup()
-while game.status != 'exit':
+while game.mode != 'exit':
     game.update_logic()
     game.update_graphics()
