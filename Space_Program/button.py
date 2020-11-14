@@ -17,7 +17,7 @@ class Button:
         # Button
         self.color: tuple = (0, 0, 128)
         self.parameter: any = parameter
-        self.width: int = 190  # in [px]
+        self.width: int = 220  # in [px]
         self.x: int = x
         self.y: int = y
 
