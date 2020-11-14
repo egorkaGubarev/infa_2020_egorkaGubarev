@@ -7,3 +7,4 @@ while game.mode != 'exit':
     game.update_logic()
     game.update_graphics()
     game.translate()
+game.save_settings()

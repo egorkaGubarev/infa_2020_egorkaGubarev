@@ -27,15 +27,48 @@ class Game:
         self.screen_height: int = 700  # in [px]
         self.screen_width: int = 1200  # in [px]
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
+        self.settings_file_name: str = 'settings.txt'
         self.show_information_dict: dict = show_information_dict
         self.smoothing: bool = True
-        self.sound_volume = None
+        self.sound_volume: int = 50  # in [%]
         self.text_color: tuple = (128, 0, 0)
+
+    def load_settings(self):
+
+        settings_file_name: str = self.settings_file_name
+        settings_file = open(settings_file_name, 'r')
+        self.fps: int = int(settings_file.readline())
+        language_raw: str = settings_file.readline()
+        language: str = language_raw.strip()
+        if language == 'English':
+            self.language: str = language
+            print('English')
+        elif language == 'Russian':
+            self.language = 'Русский'
+            print('Русский')
+        self.music_volume: int = int(settings_file.readline())
+        self.sound_volume: int = int(settings_file.readline())
+
+    def save_settings(self):
+
+        language: str = self.language
+        settings_file_name: str = self.settings_file_name
+        settings_file = open(settings_file_name, 'w')
+        print(self.fps, file=settings_file)
+        if language == 'English':
+            print(self.language, file=settings_file)
+        elif language == 'Русский':
+            print('Russian', file=settings_file)
+        print(self.music_volume, file=settings_file)
+        print(self.sound_volume, file=settings_file)
+        settings_file.close()
 
     def setup(self):
 
         self.language_latest = 'English'
         self.mode: str = 'menu'
+        self.load_settings()
+        self.update_settings()
 
     def show_information(self):
         font_name: str = self.font_name
@@ -111,3 +144,14 @@ class Game:
                 graphic_object.draw(screen)
         self.show_information()
         pygame.display.update()
+
+    def update_settings(self):
+        fps: int = self.fps
+        music_volume: int = self.music_volume
+        sound_volume: int = self.sound_volume
+        if fps == 30:
+            button_settings_fps.value_index = 0
+        elif fps == 60:
+            button_settings_fps.value_index = 1
+        slider_settings_music.value = music_volume
+        slider_settings_sound.value = sound_volume
