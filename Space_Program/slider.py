@@ -25,7 +25,8 @@ class Slider:
 
         # Handle
         self.handle_height: int = 40  # in [px]
-        self.handle_width: int = 20  # in [px]
+        self.handle_transparent_border: int = 30  # in [px]
+        self.handle_width: int = 10  # in [px]
 
         # Value
         self.value: int = value  # in [%]
@@ -75,16 +76,17 @@ class Slider:
         # Handle
         handle_height: int = self.handle_height  # in [px]
         handle_width: int = self.handle_width  # in [px]
+        h_t_b: int = self.handle_transparent_border
         handle_x: int = x + width_active - handle_width // 2  # in [px]
         handle_y: int = y - (handle_height - height) // 2  # in [px]
 
         # Mouse
-        mouse_x: int = event.pos[0]  # in [px]
-        mouse_y: int = event.pos[1]  # in [px]
-        mouse_value: int = mouse_x - x  # in [px]
+        m_x: int = event.pos[0]  # in [px]
+        m_y: int = event.pos[1]  # in [px]
+        mouse_value: int = m_x - x  # in [px]
         mouse_value_scaled: int = 100 * mouse_value // width_full  # in [%]
 
-        if handle_x <= mouse_x <= handle_x + handle_width and handle_y <= mouse_y <= handle_y + handle_height:
+        if handle_x - h_t_b <= m_x <= handle_x + handle_width + h_t_b and handle_y <= m_y <= handle_y + handle_height:
             if pygame.mouse.get_pressed()[0]:
                 self.value: int = max(0, min(mouse_value_scaled, 100))  # in [%]
             return True
