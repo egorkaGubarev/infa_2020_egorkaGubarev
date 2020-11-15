@@ -21,6 +21,10 @@ class Hero(object):
         screen - экран pygame
         """
 
+        # Физика
+        self.x: float = 0  # Координата x героя в [м]
+        self.y: float = 0  # Координата y героя в [м]
+
         # Логика
         self.satiety: float = 4186800  # Пищевая энергия в [Дж]
         self.satiety_max: int = 8373600  # Максимальня пищевая нергия в [Дж]
