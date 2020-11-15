@@ -27,6 +27,10 @@ class Game(object):
         self.fps: int = 24  # Частота обновления экарана в [Гц]
         self.screen = screen
 
+        # Физика
+        self.day_length: int = 600  # Длинна дня в [с]
+        self.time_step: float = 1 / self.fps  # Квант времени в [с]
+
     # --- Логика ---
     def update_logic(self):
         """
@@ -49,5 +53,6 @@ class Game(object):
         fps: int = self.fps  # Частота обновления экрана в [Гц]
         screen = self.screen  # Экран pygame
 
+        pygame.display.update()
         clock.tick(fps)
         screen.fill(black)
