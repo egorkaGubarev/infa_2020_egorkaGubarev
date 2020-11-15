@@ -2,6 +2,9 @@
 Модуль героя
 """
 
+import math
+import pygame
+
 from pygame.draw import *
 
 
@@ -22,6 +25,8 @@ class Hero(object):
         """
 
         # Физика
+        self.speed_max: float = 2  # Максимальная скорость героя в [м/с]
+        self.speed_reduce: float = 1  # Во столько раз действительная меньше максимальной
         self.x: float = 0  # Координата x героя в [м]
         self.y: float = 0  # Координата y героя в [м]
 
@@ -78,6 +83,58 @@ class Hero(object):
         new_satiety_int: int = round(new_satiety)  # Округлённое значение новой пищевой энергии в [Дж]
         self.satiety = max(0, new_satiety_int)  # Пищевая энергия не может быть отрицательной
 
+    def go(self, direction: str):
+        """
+        Перемещает героя
+
+        Логика
+        direction - направление перемещения
+        """
+
+        # Объекты
+        game = self.game  # Объект игры
+
+        # Физика
+        speed_max: float = self.speed_max  # Максимальная скорость героя в [м/с]
+        speed_reduce: float = self.speed_reduce  # Во столько раз действительная скорость меньше максимальной
+        speed: float = speed_max / speed_reduce  # Действительная скорость героя в [м/с]
+        time_step: float = game.time_step  # Квант времени в [с]
+        x: float = self.x  # Координата x героя в [м]
+        y: float = self.y  # Координата y героя в [м]
+
+        if direction == 'up':  # Если герой идёт вверх
+            self.y: float = y - speed * time_step  # Координата y героя в [м]
+        if direction == 'left':  # Если герой идёт влево
+            self.x: float = x - speed * time_step  # Координата x героя в [м]
+        if direction == 'down':  # Если герой идёт вниз
+            self.y: float = y + speed * time_step  # Координата y героя в [м]
+        if direction == 'right':  # Если герой идёт вправо
+            self.x: float = x + speed * time_step  # Координата x героя в [м]
+
+    def process_keys_pressed(self):
+        """
+        Обрабатывает информацию о нажатых клавишах
+        """
+
+        # Логика
+        directions_dict: dict = {pygame.K_w: 'up',  # Словарь направлений
+                                 pygame.K_a: 'left',
+                                 pygame.K_s: 'down',
+                                 pygame.K_d: 'right'}
+        directions_list: list = []  # Список направлений, по которым сейчас идёт герой
+        keys_pressed: list = pygame.key.get_pressed()  # Список нажатых клавиш
+
+        for key in directions_dict:
+            if keys_pressed[key] == 1:  # Если нажата клавиша
+                directions_list.append(directions_dict[key])
+        directions_count: int = len(directions_list)  # Количество направлений, по которым сейчас идёт герой
+        if directions_count == 2:  # Если герой идёт сразу по 2 направлениям
+            self.speed_reduce: float = math.sqrt(2)  # Сохранение полной скорости героя
+        else:
+            self.speed_reduce: float = 1  # Сохранение полной скорости героя
+        for direction in directions_list:
+            self.go(direction)
+
     # --- Графика ---
     def draw(self):
         """
@@ -105,9 +162,9 @@ class Hero(object):
         """
 
         # Логика
-        satiety: float = self.satiety
+        y: float = self.y  # Координата y героя в [м]
 
-        print('Satiety:', satiety)
+        print('Y:', y)
         print('--- Game cycle ---')
 
     def process(self):
@@ -117,6 +174,7 @@ class Hero(object):
 
         self.get_hungry()
         self.check_live_parameters()
+        self.process_keys_pressed()
         self.draw()
 
         # Отладка

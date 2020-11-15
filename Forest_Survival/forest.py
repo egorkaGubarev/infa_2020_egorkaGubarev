@@ -27,7 +27,7 @@ class Forest(object):
         """
 
         # Логика
-        self.scale: int = 100  # Масштаб в [px/м]
+        self.scale: int = 35  # Масштаб в [px/м]
 
         # Физика
         self.down_border_dict: dict = {'coordinate': 'y',
@@ -100,7 +100,7 @@ class Forest(object):
         """
 
         # Логика
-        scale: int = self.scale  # Масшьаб в [px/м]
+        scale: int = self.scale  # Масшаб в [px/м]
 
         # Графика
         line_color: tuple = self.border_color  # Цвет линии
