@@ -24,7 +24,6 @@ class Hero(object):
         self.screen = screen
 
     # --- Графика ---
-
     def draw(self):
         """
         Нарисовать героя
