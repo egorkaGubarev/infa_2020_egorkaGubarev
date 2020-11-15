@@ -25,16 +25,39 @@ class Hero(object):
         self.satiety: float = 4186800  # Пищевая энергия в [Дж]
         self.satiety_max: int = 8373600  # Максимальня пищевая нергия в [Дж]
         self.satiety_reduce: int = self.satiety_max // game.day_length  # Скорость голодания в [Дж/с]
+        self.status: str = 'alive'  # Герой жив
 
         # Объекты
         self.game = game
 
         # Графика
-        self.color: tuple = (128, 0, 0)  # Цвет - красный
+        self.color: tuple = (206, 181, 75)  # Цвет героя
         self.radius: int = 5  # Радиус в [px]
         self.screen = screen
 
     # --- Логика ---
+    def check_live_parameters(self):
+        """
+        Проверяет жизненно важные параметры героя
+        """
+
+        # Логика
+        satiety: float = self.satiety  # Пищевая энергия в [Дж]
+
+        if satiety == 0:  # Если герой смертельно голоден
+            self.get_dead()
+
+    def get_dead(self):
+        """
+        Убивает героя
+        """
+
+        # Объекты
+        game = self.game  # Объект игры
+
+        self.status: str = 'dead'  # Герой мёртв
+        game.status = 'finished'  # Игра завершена
+
     def get_hungry(self):
         """
         Уменьшает сытость
@@ -47,7 +70,9 @@ class Hero(object):
         # Объекты
         game = self.game  # Объект игры
 
-        self.satiety: float = satiety - satiety_reduce * game.time_step  # Новая пищевая энергия в [Дж]
+        new_satiety: float = satiety - satiety_reduce * game.time_step  # Новая пищевая энергия в [Дж]
+        new_satiety_int: int = round(new_satiety)  # Округлённое значение новой пищевой энергии в [Дж]
+        self.satiety = max(0, new_satiety_int)  # Пищевая энергия не может быть отрицательной
 
     # --- Графика ---
     def draw(self):
@@ -86,7 +111,8 @@ class Hero(object):
         """
 
         self.get_hungry()
+        self.check_live_parameters()
         self.draw()
-        
+
         # Отладка
         # self.log()
