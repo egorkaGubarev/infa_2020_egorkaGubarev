@@ -5,6 +5,9 @@
 import math
 
 from pygame.draw import *
+from random import *
+
+from apple import Apple
 
 
 class Forest(object):
@@ -27,11 +30,12 @@ class Forest(object):
         """
 
         # Логика
+        self.apples_list: list = []  # Список яблок
         self.scale: int = 35  # Масштаб в [px/м]
 
         # Физика
         self.down_border_dict: dict = {'coordinate': 'y',
-                                       'value': -10}  # Словарь нижней границы леса
+                                       'value': 10}  # Словарь нижней границы леса
         self.hero_x: float = hero_x
         self.hero_y: float = hero_y
         self.left_border_dict: dict = {'coordinate': 'x',
@@ -39,7 +43,7 @@ class Forest(object):
         self.right_border_dict: dict = {'coordinate': 'x',
                                         'value': 10}  # Словарь правой границы леса
         self.up_border_dict: dict = {'coordinate': 'y',
-                                     'value': 10}  # Словарь верхней границы леса
+                                     'value': -10}  # Словарь верхней границы леса
         self.borders_list: list = [self.down_border_dict, self.left_border_dict, self.right_border_dict,
                                    self.up_border_dict]
 
@@ -48,6 +52,14 @@ class Forest(object):
         self.border_width: int = 1  # Толщина границ в [px]
         self.color: tuple = (193, 86, 217)  # Цвет леса
         self.screen = screen
+
+    # --- Логика ---
+    def setup(self):
+        """
+        Действия при создании леса
+        """
+
+        self.generate_apples()
 
     # --- Физика ---
     def calculate_distance_to_line(self, line_dict: dict):
@@ -67,6 +79,22 @@ class Forest(object):
         distance: float = line_dict['value'] - hero_coordinate  # Расстояние от героя до прямой в [м]
         return distance
 
+    def calculate_distance_to_point(self, x: float, y: float):
+        """
+        Вычисляет расстояние от героя до точки
+
+        Физика
+        x - Координата x точки в [м]
+        y - Координата y точки в [м]
+        """
+
+        hero_x: float = self.hero_x  # Координата x героя в [м]
+        hero_y: float = self.hero_y  # Координата y героя в [м]
+        x_distance: float = x - hero_x  # Расстояние от героя до точки вдоль оси x в [м]
+        y_distance: float = y - hero_y  # Расстояние от героя до точки вдоль оси y в [м]
+        distance_list: list = [x_distance, y_distance]  # Компоненты расстояния от героя до точки в [м]
+        return distance_list
+
     def check_border_distance(self, border_dict: dict):
         """
         Проверяет расстояни от игрока до границы
@@ -77,6 +105,31 @@ class Forest(object):
 
         border_distance: float = self.calculate_distance_to_line(border_dict)
         return border_distance
+
+    # --- Объекты ---
+    def generate_apples(self):
+        """
+        Создаёт яблоки
+        """
+
+        # Физика
+        down_border_dict: dict = self.down_border_dict  # Словарь нижней границы
+        left_border_dict: dict = self.left_border_dict  # Словарь левой границы
+        right_border_dict: dict = self.right_border_dict  # Словарь правой границы
+        up_border_dict: dict = self.up_border_dict  # Словарь верхней границы
+        x_left: float = left_border_dict['value']  # Координата x левой границы в [м]
+        x_right: float = right_border_dict['value']  # Координата x правой границы в [м]
+        x_distance: float = x_right - x_left  # Расстояние между границами вдоль оси x в [м]
+        y_down: float = down_border_dict['value']  # Координата y нижней границы в [м]
+        y_up: float = up_border_dict['value']  # Координата y верхней границы в [м]
+        y_distance: float = y_down - y_up  # Расстояние между границами по y в [м]
+
+        apples_amount: int = 5  # Количество яблок
+        for apple_number in range(apples_amount):
+            x_apple: float = random() * x_distance + x_left  # Координата x яблока в [м]
+            y_apple: float = random() * y_distance + y_up  # Координата y яблока в [м]
+            apple = Apple(x_apple, y_apple)  # Объект яблока
+            self.apples_list.append(apple)
 
     # --- Графика ---
     def draw_background(self):
@@ -105,7 +158,7 @@ class Forest(object):
         # Графика
         line_color: tuple = self.border_color  # Цвет линии
         line_width: int = self.border_width  # Толщина линии в [px]
-        screen = self.screen
+        screen = self.screen  # Экран pygame
         screen_height: int = screen.get_height()  # Высота экрана в [px]
         screen_width: int = screen.get_width()  # Ширина экрана в [px]
 
@@ -127,6 +180,34 @@ class Forest(object):
 
             line(screen, line_color, [line_x_1, line_y_cooked], [line_x_2, line_y_cooked], line_width)
 
+    def draw_object(self, item, item_distance_x: float, item_distance_y: float):
+        """
+        Рисует объект
+
+        item - объект, который нужно нарисовать
+        item_distance_x - Расстояние от героя до точки вдоль оси x в [м]
+        item_distance_y - Расстояние от героя до точки вдоль оси y в [м]
+        """
+
+        # Логика
+        scale: int = self.scale  # Масшаб в [px/м]
+
+        # Графика
+        color: tuple = item.color  # Цвет объекта
+        radius: int = item.radius  # Радиус объекта в [px]
+        screen = self.screen  # Экран pygame
+        screen_height: int = screen.get_height()  # Высота экрана в [px]
+        screen_width: int = screen.get_width()  # Ширина экрана в [px]
+
+        x_raw: float = item_distance_x * scale  # Расстояние от героя до точки вдоль оси x в [px]
+        item_x: int = round(x_raw)  # Округлённое расстояние от героя до точки вдоль оси x в [px]
+        item_x_cooked: int = item_x + screen_width // 2  # Координата x точки в [px]
+        y_raw: float = item_distance_y * scale  # Расстояние от героя до точки вдоль оси y в [px]
+        item_y: int = round(y_raw)  # Округлённое расстояние от героя до точки вдоль оси y в [px]
+        item_y_cooked: int = item_y + screen_height // 2  # Координата y точки в [px]
+
+        circle(screen, color, (item_x_cooked, item_y_cooked), radius)
+
     # --- Обработка ---
     def process(self):
         """
@@ -142,6 +223,7 @@ class Forest(object):
         max_distance: float = math.sqrt(screen_height ** 2 + screen_width ** 2)
 
         # Логика
+        apples_list: list = self.apples_list  # Список яблок
         scale: int = self.scale  # Масштаб в [px/м]
         max_draw_distance_raw: float = max_distance // scale  # Максимальное расстояние прорисовки объекта в [м]
 
@@ -159,3 +241,16 @@ class Forest(object):
             if abs(border_distance) <= max_draw_distance:
                 coordinate: str = border_dict['coordinate']  # Координата, вдоль которой рисовать прямую
                 self.draw_line(coordinate, border_distance)
+        for apple in apples_list:
+            x_apple: float = apple.x  # Координата x яблока в [м]
+            y_apple: float = apple.y  # Координата y яблока в [м]
+            apple_distance_list: list = self.calculate_distance_to_point(x_apple, y_apple)
+            apple_distance_x: float = apple_distance_list[0]  # Расстояние от героя до точки вдоль оси x в [м]
+            apple_distance_y: float = apple_distance_list[1]  # Расстояние от героя до точки вдоль оси y в [м]
+
+            # Расстояние от героя до яблока в [м]
+            apple_distance: float = math.sqrt(apple_distance_x ** 2 + apple_distance_y ** 2)
+
+            # Если расстяние до яблока не превышает расстояния прорисовки
+            if abs(apple_distance) <= max_draw_distance:
+                self.draw_object(apple, apple_distance_x, apple_distance_y)

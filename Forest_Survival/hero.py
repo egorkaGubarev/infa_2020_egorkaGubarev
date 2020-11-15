@@ -32,7 +32,7 @@ class Hero(object):
 
         # Логика
         self.satiety: float = 4186800  # Пищевая энергия в [Дж]
-        self.satiety_max: int = 8373600  # Максимальня пищевая нергия в [Дж]
+        self.satiety_max: int = 8373600  # Максимальня пищевая энергия в [Дж]
         self.satiety_reduce: int = self.satiety_max // game.day_length  # Скорость голодания в [Дж/с]
         self.status: str = 'alive'  # Герой жив
 
