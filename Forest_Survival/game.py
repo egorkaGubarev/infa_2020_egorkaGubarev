@@ -23,7 +23,6 @@ class Game(object):
         self.status: str = 'created'  # Игра созднана
 
         # Графика
-        self.black: tuple = (0, 0, 0)  # Чёрный цвет
         self.fps: int = 24  # Частота обновления экарана в [Гц]
         self.screen = screen
 
@@ -49,10 +48,7 @@ class Game(object):
         clock = self.clock  # Часы pygame
 
         # Графика
-        black: tuple = self.black  # Чёрный чвет
         fps: int = self.fps  # Частота обновления экрана в [Гц]
-        screen = self.screen  # Экран pygame
 
         pygame.display.update()
         clock.tick(fps)
-        screen.fill(black)
