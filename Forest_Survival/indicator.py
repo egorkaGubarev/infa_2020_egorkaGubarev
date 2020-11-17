@@ -18,18 +18,14 @@ class Indicator(object):
     def __init__(self, name, screen, value: float, x: int, y: int):
         """
         Параметры
-        Отсчёт координат от левого верхнего угла индикатора
 
-        Логика
-        value - значение индицируемой величины в [%]
+        Координаты левого верхнего угла индикатора
 
-        Графика
+        name - название индикатора
         screen - экран pygame
+        value - значение индицируемой величины в [%]
         x - координата x индикатора в [px]
         y - координата y индикатора в [px]
-
-        Текст
-        name - название индикатора
         """
 
         # Логика
@@ -54,37 +50,27 @@ class Indicator(object):
     def draw(self):
         """
         Рисует индикатор
-        Координаты названия отсчитываются от его левого верхнего угла
         """
 
-        # Логика
-        value: float = self.value  # Значение индицируемой величины в [%]
-
-        # Графика
-        color_active: tuple = self.color_active  # Цвет активной части
-        color_passive: tuple = self.color_passive  # Цвет пассивой части
-        height: int = self.height  # Высота индикатора в [px]
-        width_full: int = self.width_full  # Полная длина индикатора в [px]
-        width_active: float = width_full * value // 100  # Длина активной части в [px]
+        width_active: float = self.width_full * self.value // 100  # Длина активной части в [px]
         width_active_int: int = round(width_active)  # Округлённая длина активной части в [px]
-        x: int = self.x  # Координата x индикатора в [px]
-        y: int = self.y  # Координата y индикатора в [px]
-        screen = self.screen  # Экран pygame
 
-        # Текст
-        font_color: tuple = self.color_active  # Цвет шрифта
-        font_name = self.font_name  # Название шрифта
-        font_size: int = self.height  # Размер шрифта
-        font_smoothing: bool = self.font_smoothing
-        font = Font(font_name, font_size)  # Шрифт pygame
-        name: str = self.name  # Название индикатора
-        text = font.render(name, font_smoothing, font_color)
-        text_space: int = self.text_space  # Ширина пробела между индикатором и его названием
-        text_x: int = x + width_full + text_space  # Координата x названия в [px]
+        # Пассивная часть индикатора
+        rect(self.screen, self.color_passive, (self.x, self.y, self.width_full, self.height))
 
-        rect(screen, color_passive, (x, y, width_full, height))
-        rect(screen, color_active, (x, y, width_active_int, height))
-        screen.blit(text, (text_x, y))
+        # Активная часть индикатора
+        rect(self.screen, self.color_active, (self.x, self.y, width_active_int, self.height))
+
+    def print_name(self):
+        """
+        Выводит на экран название индикатора
+        """
+
+        font = Font(self.font_name, self.height)  # Шрифт pygame
+        text_x: int = self.x + self.width_full + self.text_space  # Координата x названия в [px]
+        text = font.render(self.name, self.font_smoothing, self.color_active)
+
+        self.screen.blit(text, (text_x, self.y))
 
     # --- Обработка ---
     def log(self):
@@ -92,10 +78,7 @@ class Indicator(object):
         Выводит данные в консоль для отладки
         """
 
-        # Графика
-        width_full: int = self.width_full  # Полная длина индикатора в [px]
-
-        print('Width active int:', width_full)
+        print('Width active int:', self.width_full)
         print('--- Game cycle ---')
 
     def process(self):
@@ -104,6 +87,7 @@ class Indicator(object):
         """
 
         self.draw()
+        self.print_name()
 
         # Отладка
         # self.log()

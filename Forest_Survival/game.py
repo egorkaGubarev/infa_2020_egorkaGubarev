@@ -14,7 +14,6 @@ class Game(object):
         """
         Параметры
 
-        Графика
         screen - экран pygame
         """
 
@@ -41,14 +40,18 @@ class Game(object):
                 if event.key == pygame.K_ESCAPE:  # Если нажат Esc
                     self.status: str = 'finished'  # Игра завершена
 
+    def finish(self):
+        """
+        Завершает игру
+        """
+
+        self.status: str = 'finished'  # Игра завершена
+
     # --- Графика ---
     def update_graphics(self):
-
-        # Логика
-        clock = self.clock  # Часы pygame
-
-        # Графика
-        fps: int = self.fps  # Частота обновления экрана в [Гц]
+        """
+        Обновляет экран
+        """
 
         pygame.display.update()
-        clock.tick(fps)
+        self.clock.tick(self.fps)
